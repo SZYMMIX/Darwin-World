@@ -24,18 +24,16 @@ public class Genotype {
     public static Genotype cross(Genotype strong, Genotype weak, float strongRatio, Random random) {
         int genomeLength = strong.genes.length;
         int strongGenesCount = Math.round(genomeLength * strongRatio);
-        int weakGenesCount = genomeLength - strongGenesCount;
 
-        int[] childGenes = new int[genomeLength];
         boolean strongFromLeft = random.nextBoolean();
 
-        if (strongFromLeft){
-            System.arraycopy(strong.genes, 0, childGenes, 0, strongGenesCount);
-            System.arraycopy(weak.genes, strongGenesCount, childGenes, strongGenesCount, weakGenesCount);
-        } else{
-            System.arraycopy(weak.genes, 0, childGenes, 0, weakGenesCount);
-            System.arraycopy(strong.genes, weakGenesCount, childGenes, weakGenesCount, strongGenesCount);
-        }
+        Genotype firstParent = strongFromLeft ? strong : weak;
+        Genotype secondParent = strongFromLeft ? weak : strong;
+        int splitIndex = strongFromLeft ? strongGenesCount : (genomeLength - strongGenesCount);
+
+        int[] childGenes = IntStream.range(0, genomeLength)
+                .map(i -> (i < splitIndex) ? firstParent.genes[i] : secondParent.genes[i])
+                .toArray();
         return new Genotype(childGenes);
     }
 
