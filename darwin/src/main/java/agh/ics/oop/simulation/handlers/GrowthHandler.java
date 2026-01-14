@@ -1,6 +1,7 @@
 package agh.ics.oop.simulation.handlers;
 
 import java.util.HashMap;
+import java.util.Random;
 
 import agh.ics.oop.model.Plant;
 import agh.ics.oop.model.Vector2d;
@@ -13,12 +14,16 @@ public class GrowthHandler {
 
     private final HashMap<Vector2d, Plant> plants;
 
-    public GrowthHandler(SimulationParameters parameters, HashMap<Vector2d, Plant> plants) {
+    private final Random random;
+
+    public GrowthHandler(SimulationParameters parameters, HashMap<Vector2d, Plant> plants, Random random) {
         this.width = parameters.width();
         this.height = parameters.height();
         this.dailyPlantGrowth = parameters.dailyPlantGrowth();
 
         this.plants = plants;
+
+        this.random = random;
 
         spawn(parameters.initialPlantCount());
     }

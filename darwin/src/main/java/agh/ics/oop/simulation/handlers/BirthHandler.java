@@ -2,6 +2,7 @@ package agh.ics.oop.simulation.handlers;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Random;
 
 import agh.ics.oop.simulation.SimulationParameters;
 import agh.ics.oop.model.Animal;
@@ -17,7 +18,13 @@ public class BirthHandler {
     private final ArrayList<Animal> animals;
     private final HashMap<Vector2d, Plant> plants;
 
-    public BirthHandler(SimulationParameters parameters, ArrayList<Animal> animals, HashMap<Vector2d, Plant> plants) {
+    private final Random random;
+
+    public BirthHandler(
+            SimulationParameters parameters,
+            ArrayList<Animal> animals,
+            HashMap<Vector2d, Plant> plants,
+            Random random) {
         this.reproductionEnergyMin = parameters.reproductionEnergyMin();
         this.reproductionEnergyCost = parameters.reproductionEnergyCost();
         this.minMutations = parameters.minMutations();
@@ -25,6 +32,8 @@ public class BirthHandler {
 
         this.animals = animals;
         this.plants = plants;
+
+        this.random = random;
 
         spawn(parameters.initialAnimalCount(), parameters.initialAnimalEnergy(), parameters.genomeLength());
     }

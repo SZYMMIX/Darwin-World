@@ -39,8 +39,8 @@ public class Simulation {
         this.death = new DeathHandler(parameters, this.animals, this.dead);
         this.movement = new MovementHandler(parameters, this.animals);
         this.consumption = new ConsumptionHandler(parameters, this.animals, this.plants);
-        this.birth = new BirthHandler(parameters, this.animals, this.plants);
-        this.growth = new GrowthHandler(parameters, this.plants);
+        this.birth = new BirthHandler(parameters, this.animals, this.plants, this.random);
+        this.growth = new GrowthHandler(parameters, this.plants, this.random);
 
         this.currentDay = 0;
     }
