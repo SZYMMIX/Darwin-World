@@ -7,18 +7,27 @@ import agh.ics.oop.model.Vector2d;
 import agh.ics.oop.simulation.SimulationParameters;
 
 public class GrowthHandler {
+    private final int width;
+    private final int height;
     private final int dailyPlantGrowth;
 
-    public GrowthHandler(SimulationParameters parameters) {
+    private final HashMap<Vector2d, Plant> plants;
+
+    public GrowthHandler(SimulationParameters parameters, HashMap<Vector2d, Plant> plants) {
+        this.width = parameters.width();
+        this.height = parameters.height();
         this.dailyPlantGrowth = parameters.dailyPlantGrowth();
+
+        this.plants = plants;
+
+        spawn(parameters.initialPlantCount());
     }
 
-    public HashMap<Vector2d, Plant> spawn(int initialPlantCount) {
+    private void spawn(int initialPlantCount) {
         // TODO:
-        return null;
     }
 
-    public void handle(HashMap<Vector2d, Plant> plans) {
+    public void handle() {
         // TODO:
     }
 }
