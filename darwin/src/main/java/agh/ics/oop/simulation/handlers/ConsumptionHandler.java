@@ -13,12 +13,18 @@ public class ConsumptionHandler {
     private final int poisonEnergyCost;
     // TODO: Immune Genome
 
-    public ConsumptionHandler(SimulationParameters parameters) {
+    private final List<Animal> animals;
+    private final HashMap<Vector2d, Plant> plants;
+
+    public ConsumptionHandler(SimulationParameters parameters, List<Animal> animals, HashMap<Vector2d, Plant> plants) {
         this.plantEnergy = parameters.plantEnergy();
         this.poisonEnergyCost = parameters.poisonEnergyCost();
+
+        this.animals = animals;
+        this.plants = plants;
     }
 
-    public void handle(List<Animal> animals, HashMap<Vector2d, Plant> plants) {
+    public void handle() {
         // TODO:
     }
 }
