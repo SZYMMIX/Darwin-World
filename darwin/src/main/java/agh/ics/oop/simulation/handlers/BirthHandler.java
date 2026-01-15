@@ -1,7 +1,7 @@
 package agh.ics.oop.simulation.handlers;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import agh.ics.oop.simulation.SimulationParameters;
@@ -15,15 +15,15 @@ public class BirthHandler {
     private final int minMutations;
     private final int maxMutations;
 
-    private final ArrayList<Animal> animals;
-    private final HashMap<Vector2d, Plant> plants;
+    private final List<Animal> animals;
+    private final Map<Vector2d, Plant> plants;
 
     private final Random random;
 
     public BirthHandler(
             SimulationParameters parameters,
-            ArrayList<Animal> animals,
-            HashMap<Vector2d, Plant> plants,
+            List<Animal> animals,
+            Map<Vector2d, Plant> plants,
             Random random) {
         this.reproductionEnergyMin = parameters.reproductionEnergyMin();
         this.reproductionEnergyCost = parameters.reproductionEnergyCost();

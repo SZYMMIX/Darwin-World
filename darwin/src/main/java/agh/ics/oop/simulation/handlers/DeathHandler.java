@@ -1,6 +1,6 @@
 package agh.ics.oop.simulation.handlers;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.List;
 
 import agh.ics.oop.model.Animal;
@@ -9,10 +9,10 @@ import agh.ics.oop.simulation.SimulationParameters;
 public class DeathHandler {
     private final int dailyEnergyCost;
 
-    private final ArrayList<Animal> animals;
-    private final ArrayList<Animal> dead;
+    private final List<Animal> animals;
+    private final List<Animal> dead;
 
-    public DeathHandler(SimulationParameters parameters, ArrayList<Animal> animals, ArrayList<Animal> dead) {
+    public DeathHandler(SimulationParameters parameters, List<Animal> animals, List<Animal> dead) {
         this.dailyEnergyCost = parameters.dailyEnergyCost();
 
         this.animals = animals;

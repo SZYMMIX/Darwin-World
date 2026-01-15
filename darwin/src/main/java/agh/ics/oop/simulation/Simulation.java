@@ -2,6 +2,8 @@ package agh.ics.oop.simulation;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 import agh.ics.oop.model.Animal;
@@ -17,9 +19,9 @@ import agh.ics.oop.simulation.handlers.MovementHandler;
 public class Simulation {
     private final Random random;
 
-    private final ArrayList<Animal> animals;
-    private final ArrayList<Animal> dead;
-    private final HashMap<Vector2d, Plant> plants;
+    private final List<Animal> animals;
+    private final List<Animal> dead;
+    private final Map<Vector2d, Plant> plants;
 
     private final DeathHandler death;
     private final MovementHandler movement;

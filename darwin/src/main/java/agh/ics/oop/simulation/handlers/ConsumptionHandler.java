@@ -1,6 +1,6 @@
 package agh.ics.oop.simulation.handlers;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.List;
 
 import agh.ics.oop.simulation.SimulationParameters;
@@ -14,9 +14,9 @@ public class ConsumptionHandler {
     // TODO: Immune Genome
 
     private final List<Animal> animals;
-    private final HashMap<Vector2d, Plant> plants;
+    private final Map<Vector2d, Plant> plants;
 
-    public ConsumptionHandler(SimulationParameters parameters, List<Animal> animals, HashMap<Vector2d, Plant> plants) {
+    public ConsumptionHandler(SimulationParameters parameters, List<Animal> animals, Map<Vector2d, Plant> plants) {
         this.plantEnergy = parameters.plantEnergy();
         this.poisonEnergyCost = parameters.poisonEnergyCost();
 
