@@ -1,142 +1,61 @@
 package agh.ics.oop.simulation;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
 import agh.ics.oop.model.Animal;
-import agh.ics.oop.model.Genotype;
 import agh.ics.oop.model.Plant;
 import agh.ics.oop.model.Vector2d;
 
-import java.util.*;
+import agh.ics.oop.simulation.handlers.BirthHandler;
+import agh.ics.oop.simulation.handlers.ConsumptionHandler;
+import agh.ics.oop.simulation.handlers.DeathHandler;
+import agh.ics.oop.simulation.handlers.GrowthHandler;
+import agh.ics.oop.simulation.handlers.MovementHandler;
 
 public class Simulation {
-    private final SimulationConfig config;
-    private final Random random = new Random();
+    private final Random random;
 
-    private List<Animal> animals = new ArrayList<>();
-    private final Map<Vector2d, Plant> plants = new HashMap<>();
+    private final List<Animal> animals;
+    private final List<Animal> dead;
+    private final Map<Vector2d, Plant> plants;
 
-    private final List<Animal> deadAnimals = new ArrayList<>();
-    private int currentDay = 0;
+    private final DeathHandler death;
+    private final MovementHandler movement;
+    private final ConsumptionHandler consumption;
+    private final BirthHandler birth;
+    private final GrowthHandler growth;
 
-    public Simulation(SimulationParameters params) {
-        Genotype immunityGenotype = null;
-        if (params.isPoisonMap()) {
-            immunityGenotype = Genotype.random(params.genomeLength(), random);
-        }
+    private int currentDay;
 
-        this.config = new SimulationConfig(
-                params.width(),
-                params.height(),
-                params.plantEnergy(),
-                params.dailyEnergyCost(),
-                params.dailyPlantGrowth(),
-                params.reproductionEnergyMin(),
-                params.reproductionEnergyCost(),
-                params.minMutations(),
-                params.maxMutations(),
-                params.genomeLength(),
-                params.isPoisonMap(),
-                params.poisonProbability(),
-                params.poisonEnergyCost(),
-                immunityGenotype
-        );
+    public Simulation(SimulationParameters parameters) {
+        this.random = new Random();
 
-        initializeAnimals(params.initialAnimalCount(), params.initialAnimalEnergy());
-        initializePlants(params.initialPlantCount());
-    }
+        this.animals = new ArrayList<>();
+        this.dead = new ArrayList<>();
+        this.plants = new HashMap<>();
 
-    private void initializeAnimals(int count, int initialEnergy) {
-        for (int i = 0; i < count; i++) {
-            Vector2d position = generateRandomPosition();
-            Animal animal = Animal.createRandom(
-                    position,
-                    initialEnergy,
-                    config.genomeLength(),
-                    0,
-                    random
-            );
-            animals.add(animal);
-        }
-    }
+        this.death = new DeathHandler(parameters, this.animals, this.dead);
+        this.movement = new MovementHandler(parameters, this.animals);
+        this.consumption = new ConsumptionHandler(parameters, this.animals, this.plants);
+        this.birth = new BirthHandler(parameters, this.animals, this.plants, this.random);
+        this.growth = new GrowthHandler(parameters, this.plants, this.random);
 
-    private void initializePlants(int count) {
-        // TODO: Jungle logic
-        for (int i = 0; i < count; i++) {
-            Vector2d position = generateRandomPosition();
-            if (!plants.containsKey(position)) {
-                boolean isPoison = config.isPoisonMap() && random.nextDouble() < config.poisonProbability();
-                plants.put(position, new Plant(isPoison));
-            }
-        }
-    }
-
-    private Vector2d generateRandomPosition() {
-        return new Vector2d(
-                random.nextInt(config.width()),
-                random.nextInt(config.height())
-        );
+        this.currentDay = 0;
     }
 
     public void step() {
-        removeDeadAnimals();
-        moveAnimals();
-        eatPlants();
-        reproduceAnimals();
-        growPlants();
+        death.handle();
+        movement.handle();
+        consumption.handle();
+        birth.handle();
+        growth.handle();
 
-        subtractDailyEnergy();
+        death.subtractEnergy();
 
         currentDay++;
-    }
-
-    private void removeDeadAnimals() {
-        Iterator<Animal> iterator = animals.iterator();
-        while (iterator.hasNext()) {
-            Animal animal = iterator.next();
-            if (animal.isDead()) {
-                animal.markAsDead(currentDay);
-                deadAnimals.add(animal);
-                iterator.remove();
-            }
-        }
-    }
-
-    private void moveAnimals() {
-        for (Animal animal : animals) {
-            animal.move(config.width(), config.height(), currentDay);
-        }
-    }
-
-    private void subtractDailyEnergy() {
-        for (Animal animal : animals) {
-            animal.subtractEnergy(config.dailyEnergyCost());
-        }
-    }
-
-    private void eatPlants() {
-        // TODO: In next task
-    }
-
-    private void reproduceAnimals() {
-        // TODO: In next task
-    }
-
-    private void growPlants() {
-        initializePlants(config.dailyPlantGrowth());
-    }
-
-    public synchronized List<Animal> getAnimals() {
-        return new ArrayList<>(animals);
-    }
-
-    public synchronized Map<Vector2d, Plant> getPlants() {
-        return new HashMap<>(plants);
-    }
-
-    public SimulationConfig getConfig() {
-        return config;
-    }
-
-    public int getCurrentDay() {
-        return currentDay;
     }
 }
