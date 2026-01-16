@@ -35,7 +35,7 @@ public class BirthHandler {
 
         this.random = random;
 
-        spawn(parameters.initialAnimalCount(), parameters.initialAnimalEnergy(), parameters.genomeLength());
+        spawn(parameters.initialAnimalCount(), parameters.initialAnimalEnergy(), parameters.genotypeLength());
     }
 
     private void spawn(int initialAnimalCount, int initialAnimalEnergy, int genomeLength) {
