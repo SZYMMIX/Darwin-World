@@ -1,5 +1,6 @@
 package agh.ics.oop.simulation.handlers;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.List;
 
@@ -19,11 +20,21 @@ public class DeathHandler {
         this.dead = dead;
     }
 
-    public void handle() {
-        // TODO:
+    public void handle(int currentDay) {
+        Iterator<Animal> iterator = animals.iterator();
+        while (iterator.hasNext()) {
+            Animal animal = iterator.next();
+            if (animal.isDead()) {
+                animal.markAsDead(currentDay);
+                dead.add(animal);
+                iterator.remove();
+            }
+        }
     }
 
     public void subtractEnergy() {
-        // TODO:
+        for(Animal animal : animals){
+            animal.subtractEnergy(dailyEnergyCost);
+        }
     }
 }

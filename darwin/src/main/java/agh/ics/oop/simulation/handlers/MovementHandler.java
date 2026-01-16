@@ -18,7 +18,9 @@ public class MovementHandler {
         this.animals = animals;
     }
 
-    public void handle() {
-        // TODO:
+    public void handle(int currentDay) {
+        for(Animal animal : animals){
+            animal.move(width, height, currentDay);
+        }
     }
 }

@@ -88,6 +88,7 @@ public class Animal {
     public Direction getDirection() { return direction; }
     public Genotype getGenotype() { return genotype; }
     public int getEnergy() { return energy; }
+    public int getBirthDay() { return birthDay; }
 
     public int getAge(int currentDay) {
         if (deathDay != null) {

@@ -40,7 +40,7 @@ public class Simulation {
 
         this.death = new DeathHandler(parameters, this.animals, this.dead);
         this.movement = new MovementHandler(parameters, this.animals);
-        this.consumption = new ConsumptionHandler(parameters, this.animals, this.plants);
+        this.consumption = new ConsumptionHandler(parameters, this.animals, this.plants, this.random);
         this.birth = new BirthHandler(parameters, this.animals, this.plants, this.random);
         this.growth = new GrowthHandler(parameters, this.plants, this.random);
 
@@ -48,10 +48,10 @@ public class Simulation {
     }
 
     public void step() {
-        death.handle();
-        movement.handle();
+        death.handle(this.currentDay);
+        movement.handle(this.currentDay);
         consumption.handle();
-        birth.handle();
+        birth.handle(this.currentDay);
         growth.handle();
 
         death.subtractEnergy();
