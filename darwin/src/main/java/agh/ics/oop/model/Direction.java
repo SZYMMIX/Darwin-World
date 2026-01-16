@@ -1,5 +1,7 @@
 package agh.ics.oop.model;
 
+import java.util.Random;
+
 public enum Direction {
     NORTH(0, -1),
     NORTH_EAST(1, -1),
@@ -22,5 +24,9 @@ public enum Direction {
 
     public Direction shift(int steps) {
         return values()[(this.ordinal() + steps) % values().length];
+    }
+
+    public static Direction random(Random random) {
+        return values()[random.nextInt(values().length)];
     }
 }
