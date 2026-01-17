@@ -119,6 +119,7 @@ class RuntimeAnimal {
     }
 
     int getId() { return id; }
+    AnimalDetails getDetails() { return details; }
     int getEnergy() { return energy; }
     int getChildrenCount() { return childrenCount; }
     Vector2d getPosition() { return position; }
