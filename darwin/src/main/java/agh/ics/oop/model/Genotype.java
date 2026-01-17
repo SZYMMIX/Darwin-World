@@ -1,11 +1,8 @@
 package agh.ics.oop.model;
 
-import java.util.Collections;
-import java.util.List;
+
 import java.util.Arrays;
 import java.util.Random;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class Genotype {
     private final int[] genes;
@@ -24,42 +21,57 @@ public class Genotype {
     public static Genotype cross(Genotype strong, Genotype weak, float strongRatio, Random random) {
         int genomeLength = strong.genes.length;
         int strongGenesCount = Math.round(genomeLength * strongRatio);
+        int weakGenesCount = genomeLength - strongGenesCount;
 
+        int[] childGenes = new int[genomeLength];
         boolean strongFromLeft = random.nextBoolean();
 
-        Genotype firstParent = strongFromLeft ? strong : weak;
-        Genotype secondParent = strongFromLeft ? weak : strong;
-        int splitIndex = strongFromLeft ? strongGenesCount : (genomeLength - strongGenesCount);
+        if (strongFromLeft) {
+            System.arraycopy(strong.genes, 0, childGenes, 0, strongGenesCount);
+            System.arraycopy(weak.genes, strongGenesCount, childGenes, strongGenesCount, weakGenesCount);
+        } else {
+            System.arraycopy(weak.genes, 0, childGenes, 0, weakGenesCount);
+            System.arraycopy(strong.genes, weakGenesCount, childGenes, weakGenesCount, strongGenesCount);
+        }
 
-        int[] childGenes = IntStream.range(0, genomeLength)
-                .map(i -> (i < splitIndex) ? firstParent.genes[i] : secondParent.genes[i])
-                .toArray();
         return new Genotype(childGenes);
     }
 
     public void mutate(int minMutations, int maxMutations, Random random) {
         int mutationsCount = minMutations + random.nextInt(maxMutations - minMutations + 1);
+
         mutationsCount = Math.min(mutationsCount, this.genes.length);
 
-        List<Integer> allIndices = IntStream.range(0, this.genes.length)
-                .boxed()
-                .collect(Collectors.toList());
+        int[] indices = new int[this.genes.length];
+        for (int i = 0; i < this.genes.length; i++) {
+            indices[i] = i;
+        }
 
-        Collections.shuffle(allIndices, random);
+        int currentPoolSize = this.genes.length;
 
-        allIndices.stream()
-                .limit(mutationsCount)
-                .forEach(index -> {
-                    int oldValue = this.genes[index];
-                    int offset = 1 + random.nextInt(7);
-                    this.genes[index] = (oldValue + offset) % 8;
-                });
+        for (int k = 0; k < mutationsCount; k++) {
+            int randomPoolIndex = random.nextInt(currentPoolSize);
+
+            int geneIndexToMutate = indices[randomPoolIndex];
+
+            int oldValue = this.genes[geneIndexToMutate];
+            int offset = 1 + random.nextInt(7); // 1..7
+            this.genes[geneIndexToMutate] = (oldValue + offset) % 8;
+
+            indices[randomPoolIndex] = indices[currentPoolSize - 1];
+
+            currentPoolSize--;
+        }
     }
 
     public int similarity(Genotype other) {
-        return (int) IntStream.range(0, this.genes.length)
-                .filter(i -> this.genes[i] == other.genes[i])
-                .count();
+        int sameCount = 0;
+        for (int i = 0; i < this.genes.length; i++) {
+            if (this.genes[i] == other.genes[i]) {
+                sameCount++;
+            }
+        }
+        return sameCount;
     }
 
     public int getGene(int index) {
