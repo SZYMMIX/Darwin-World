@@ -2,7 +2,6 @@ package agh.ics.oop.simulation;
 
 import agh.ics.oop.model.Genotype;
 import agh.ics.oop.model.Plant;
-import agh.ics.oop.model.Vector2d;
 
 import java.util.*;
 
