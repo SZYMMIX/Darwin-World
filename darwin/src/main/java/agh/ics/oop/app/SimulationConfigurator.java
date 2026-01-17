@@ -1,7 +1,6 @@
 package agh.ics.oop.app;
 
 import agh.ics.oop.simulation.SimulationParameters;
-import javafx.fxml.FXMLLoader;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -11,7 +10,12 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 
+import java.util.Optional;
+
 public class SimulationConfigurator {
+
+    private final ConfigurationManager configManager = new ConfigurationManager();
+    private final ComboBox<String> presetComboBox = new ComboBox<>();
 
     private final Spinner<Integer> widthSpinner = createSpinner(10, 500, 20);
     private final Spinner<Integer> heightSpinner = createSpinner(10, 500, 20);
@@ -87,7 +91,7 @@ public class SimulationConfigurator {
         );
 
         scrollPane.setContent(mainLayout);
-        Scene scene = new Scene(scrollPane, 500, 750);
+        Scene scene = new Scene(scrollPane, 550, 800);
         primaryStage.setScene(scene);
         primaryStage.show();
     }
@@ -113,26 +117,108 @@ public class SimulationConfigurator {
     }
 
     private HBox createButtons() {
+        refreshPresets();
+        presetComboBox.setPromptText("Wybierz preset...");
+        presetComboBox.setPrefWidth(140);
+
+        Button loadBtn = new Button("Wczytaj");
+        loadBtn.setOnAction(e -> handleLoad());
+
+        Button saveBtn = new Button("Zapisz");
+        saveBtn.setOnAction(e -> handleSave());
+
         Button startBtn = new Button("Rozpocznij Symulację");
-        startBtn.setStyle("-fx-font-size: 16px; -fx-base: #b6e7c9;");
-        startBtn.setPrefWidth(200);
+        startBtn.setStyle("-fx-font-size: 14px; -fx-base: #b6e7c9; -fx-font-weight: bold;");
+        startBtn.setPrefWidth(180);
         startBtn.setOnAction(event -> handleStart());
 
-        // Placeholder na Save/Load
-        Button saveBtn = new Button("Zapisz");
-        Button loadBtn = new Button("Wczytaj");
+        HBox leftSide = new HBox(10, presetComboBox, loadBtn, saveBtn);
+        leftSide.setAlignment(Pos.CENTER_LEFT);
 
-        HBox buttons = new HBox(10, loadBtn, saveBtn, new Region(), startBtn);
-        HBox.setHgrow(buttons.getChildren().get(2), Priority.ALWAYS);
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        HBox buttons = new HBox(10, leftSide, spacer, startBtn);
         buttons.setAlignment(Pos.CENTER_RIGHT);
+        buttons.setPadding(new Insets(10, 0, 0, 0));
 
         return buttons;
     }
 
+    private void refreshPresets() {
+        presetComboBox.getItems().clear();
+        presetComboBox.getItems().addAll(configManager.getAvailablePresets());
+    }
+
+    private void handleSave() {
+        TextInputDialog dialog = new TextInputDialog("moj_konfig");
+        dialog.setTitle("Zapisz konfigurację");
+        dialog.setHeaderText("Zapisywanie nowego presetu");
+        dialog.setContentText("Podaj nazwę pliku:");
+
+        Optional<String> result = dialog.showAndWait();
+        result.ifPresent(name -> {
+            try {
+                SimulationParameters params = buildParameters();
+                configManager.saveConfiguration(name, params);
+                refreshPresets();
+                presetComboBox.getSelectionModel().select(name);
+            } catch (Exception e) {
+                showAlert("Błąd zapisu", "Nie udało się zapisać pliku: " + e.getMessage());
+            }
+        });
+    }
+
+    private void handleLoad() {
+        String selected = presetComboBox.getValue();
+        if (selected == null || selected.isBlank()) {
+            showAlert("Błąd", "Wybierz preset z listy!");
+            return;
+        }
+
+        try {
+            SimulationParameters params = configManager.loadConfiguration(selected);
+            updateControls(params);
+        } catch (Exception e) {
+            showAlert("Błąd odczytu", "Nie udało się wczytać pliku: " + e.getMessage());
+        }
+    }
+
+    private void updateControls(SimulationParameters params) {
+        widthSpinner.getValueFactory().setValue(params.width());
+        heightSpinner.getValueFactory().setValue(params.height());
+
+        initialPlantCountSpinner.getValueFactory().setValue(params.initialPlantCount());
+        plantEnergySpinner.getValueFactory().setValue(params.plantEnergy());
+        dailyPlantGrowthSpinner.getValueFactory().setValue(params.dailyPlantGrowth());
+
+        initialAnimalCountSpinner.getValueFactory().setValue(params.initialAnimalCount());
+        initialAnimalEnergySpinner.getValueFactory().setValue(params.initialAnimalEnergy());
+
+        dailyEnergyCostSpinner.getValueFactory().setValue(params.dailyEnergyCost());
+        reproductionEnergyMinSpinner.getValueFactory().setValue(params.reproductionEnergyMin());
+        reproductionEnergyCostSpinner.getValueFactory().setValue(params.reproductionEnergyCost());
+
+        minMutationsSpinner.getValueFactory().setValue(params.minMutations());
+        maxMutationsSpinner.getValueFactory().setValue(params.maxMutations());
+        genotypeLengthSpinner.getValueFactory().setValue(params.genotypeLength());
+
+        poisonMapCheckBox.setSelected(params.isPoisonMap());
+        poisonProbabilitySlider.setValue(params.poisonProbability());
+        poisonEnergyCostSpinner.getValueFactory().setValue(params.poisonEnergyCost());
+    }
+
+    private void showAlert(String title, String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
+    }
+
     private void handleStart() {
         SimulationParameters params = buildParameters();
-        SimulationWindow simulationWindow = new SimulationWindow(params);
-        simulationWindow.show();
+        new SimulationWindow(params).show();
     }
 
     private SimulationParameters buildParameters() {
