@@ -131,7 +131,8 @@ public class SimulationConfigurator {
 
     private void handleStart() {
         SimulationParameters params = buildParameters();
-        System.out.println("Start symulacji z parametrami: " + params);
+        SimulationWindow simulationWindow = new SimulationWindow(params);
+        simulationWindow.show();
     }
 
     private SimulationParameters buildParameters() {
