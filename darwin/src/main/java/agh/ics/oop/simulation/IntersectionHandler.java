@@ -46,6 +46,7 @@ class InteractionHandler {
                     params.reproductionEnergyMin(),
                     params.reproductionEnergyCost(),
                     params.minMutations(),
+                    params.maxMutations(),
                     random
             );
 

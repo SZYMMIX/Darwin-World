@@ -37,31 +37,35 @@ public class Genotype {
         return new Genotype(childGenes);
     }
 
-    public void mutate(int minMutations, int maxMutations, Random random) {
+    public Genotype mutate(int minMutations, int maxMutations, Random random) {
+        int[] mutatedGenes = this.genes.clone();
+
+        int genomeLength = mutatedGenes.length;
+
         int mutationsCount = minMutations + random.nextInt(maxMutations - minMutations + 1);
+        mutationsCount = Math.min(mutationsCount, genomeLength);
 
-        mutationsCount = Math.min(mutationsCount, this.genes.length);
-
-        int[] indices = new int[this.genes.length];
-        for (int i = 0; i < this.genes.length; i++) {
+        int[] indices = new int[genomeLength];
+        for (int i = 0; i < genomeLength; i++) {
             indices[i] = i;
         }
 
-        int currentPoolSize = this.genes.length;
+        int currentPoolSize = genomeLength;
 
         for (int k = 0; k < mutationsCount; k++) {
             int randomPoolIndex = random.nextInt(currentPoolSize);
 
             int geneIndexToMutate = indices[randomPoolIndex];
 
-            int oldValue = this.genes[geneIndexToMutate];
-            int offset = 1 + random.nextInt(7); // 1..7
-            this.genes[geneIndexToMutate] = (oldValue + offset) % 8;
+            int oldValue = mutatedGenes[geneIndexToMutate];
+            int offset = 1 + random.nextInt(7);
+            mutatedGenes[geneIndexToMutate] = (oldValue + offset) % 8;
 
             indices[randomPoolIndex] = indices[currentPoolSize - 1];
 
             currentPoolSize--;
         }
+        return new Genotype(mutatedGenes);
     }
 
     public int similarity(Genotype other) {
