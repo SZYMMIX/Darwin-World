@@ -23,14 +23,6 @@ class RuntimeAnimal {
         this.childrenCount = childrenCount;
     }
 
-    static RuntimeAnimal random(int id, Vector2d position, int initialEnergy, int genotypeLength, Random random) {
-        Genotype genotype = Genotype.random(genotypeLength, random);
-        AnimalDetails details = new AnimalDetails(genotype, 0, null, null);
-        Direction direction = Direction.random(random);
-
-        return new RuntimeAnimal(id, details, position, direction, initialEnergy, 0);
-    }
-
     static RuntimeAnimal fromChildData(int id, ChildData childData, int birthDay, Random random) {
         AnimalDetails details = new AnimalDetails(childData.genotype(), birthDay, childData.parentAId(), childData.parentBId());
         Direction direction = Direction.random(random);
@@ -66,8 +58,8 @@ class RuntimeAnimal {
         partner.childrenCount++;
 
         float ratio = (float) this.energy / (this.energy + partner.energy);
-        Genotype childGenotype = Genotype.cross(this.details.genotype(), partner.details.genotype(), ratio, random);
-        childGenotype.mutate(mutationsCount, random);
+        Genotype childGenotype = Genotype.cross(this.details.genotype(), partner.details.genotype(), ratio, random)
+                                         .mutate(mutationsCount, random);
 
         return new ChildData(
                 position,
@@ -125,4 +117,9 @@ class RuntimeAnimal {
     public int hashCode() {
         return Objects.hash(id);
     }
+
+    int getId() { return id; }
+    int getEnergy() { return energy; }
+    int getChildrenCount() { return childrenCount; }
+    Vector2d getPosition() { return position; }
 }
