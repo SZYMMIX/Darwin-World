@@ -47,7 +47,7 @@ class RuntimeAnimal {
         }
     }
 
-    ChildData reproduce(RuntimeAnimal partner, int minEnergy, int energyCost, int mutationsCount, Random random) {
+    ChildData reproduce(RuntimeAnimal partner, int minEnergy, int energyCost, int minMutations, int maxMutations, Random random) {
         if (this.energy < minEnergy) return null;
         if (partner == null || partner.energy < minEnergy) return null;
 
@@ -59,7 +59,7 @@ class RuntimeAnimal {
 
         float ratio = (float) this.energy / (this.energy + partner.energy);
         Genotype childGenotype = Genotype.cross(this.details.genotype(), partner.details.genotype(), ratio, random)
-                                         .mutate(mutationsCount, random);
+                                         .mutate(minMutations, maxMutations, random);
 
         return new ChildData(
                 position,
