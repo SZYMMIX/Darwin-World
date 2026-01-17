@@ -1,61 +1,131 @@
 package agh.ics.oop.simulation;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-
-import agh.ics.oop.model.Animal;
+import agh.ics.oop.model.AnimalSnapshot;
 import agh.ics.oop.model.Plant;
 import agh.ics.oop.model.Vector2d;
 
-import agh.ics.oop.simulation.handlers.BirthHandler;
-import agh.ics.oop.simulation.handlers.ConsumptionHandler;
-import agh.ics.oop.simulation.handlers.DeathHandler;
-import agh.ics.oop.simulation.handlers.GrowthHandler;
-import agh.ics.oop.simulation.handlers.MovementHandler;
+import java.util.*;
 
 public class Simulation {
+    private final SimulationParameters params;
+    private final SimulationRepository repository;
+    private final WorldMap map;
+    private final InteractionHandler interactionHandler;
     private final Random random;
 
-    private final List<Animal> animals;
-    private final List<Animal> dead;
-    private final Map<Vector2d, Plant> plants;
+    private int currentDay = -1;
 
-    private final DeathHandler death;
-    private final MovementHandler movement;
-    private final ConsumptionHandler consumption;
-    private final BirthHandler birth;
-    private final GrowthHandler growth;
-
-    private int currentDay;
-
-    public Simulation(SimulationParameters parameters) {
+    public Simulation(SimulationParameters params) {
+        this.params = params;
+        this.repository = new SimulationRepository();
         this.random = new Random();
 
-        this.animals = new ArrayList<>();
-        this.dead = new ArrayList<>();
-        this.plants = new HashMap<>();
+        this.map = new WorldMap(params, random);
+        this.interactionHandler = new InteractionHandler(params, random);
 
-        this.death = new DeathHandler(parameters, this.animals, this.dead);
-        this.movement = new MovementHandler(parameters, this.animals);
-        this.consumption = new ConsumptionHandler(parameters, this.animals, this.plants);
-        this.birth = new BirthHandler(parameters, this.animals, this.plants, this.random);
-        this.growth = new GrowthHandler(parameters, this.plants, this.random);
-
-        this.currentDay = 0;
+        spawnInitialAnimals();
+        spawnInitialPlants();
     }
 
-    public void step() {
-        death.handle();
-        movement.handle();
-        consumption.handle();
-        birth.handle();
-        growth.handle();
-
-        death.subtractEnergy();
+    public SimulationSnapshot step() {
+        removeDead();
+        moveAnimals();
+        eatAndReproduce();
+        map.growPlants(params.dailyPlantGrowth());
+        applyDailyEnergyCost();
 
         currentDay++;
+
+        return createSnapshot();
+    }
+
+    private void removeDead() {
+        List<RuntimeAnimal> deadAnimals = map.getAnimals().stream()
+                .filter(RuntimeAnimal::isDead)
+                .toList();
+
+        for (RuntimeAnimal dead : deadAnimals) {
+            repository.registerDeath(dead.getId(), currentDay);
+            map.removeAnimal(dead);
+        }
+    }
+
+    private void moveAnimals() {
+        int width = map.getWidth();
+        int height = map.getHeight();
+
+        for (RuntimeAnimal animal : map.getAnimals()) {
+            animal.move(width, height, currentDay);
+        }
+    }
+
+    private void eatAndReproduce() {
+        List<ChildData> newBirths = new ArrayList<>();
+
+        Map<Vector2d, List<RuntimeAnimal>> conflicts = RuntimeAnimal.getSortedGroups(map.getAnimals());
+        Map<Vector2d, Plant> plants = map.getPlants();
+
+        for (var entry : conflicts.entrySet()) {
+            Vector2d position = entry.getKey();
+            List<RuntimeAnimal> animalsOnField = entry.getValue();
+            Plant plant = plants.get(position);
+
+            var result = interactionHandler.handleInteractions(animalsOnField, plant);
+
+            if (result.plantEaten()) {
+                map.removePlant(position);
+            }
+
+            newBirths.addAll(result.newChildren());
+        }
+
+        registerNewChildren(newBirths);
+    }
+
+    private void registerNewChildren(List<ChildData> births) {
+        for (ChildData data : births) {
+            RuntimeAnimal child = repository.registerBirth(data, currentDay, random);
+            map.addAnimal(child);
+        }
+    }
+
+    private void applyDailyEnergyCost() {
+        int cost = params.dailyEnergyCost();
+        for (RuntimeAnimal animal : map.getAnimals()) {
+            animal.subtractEnergy(cost);
+        }
+    }
+
+    private SimulationSnapshot createSnapshot() {
+        SimulationStats stats = repository.getStats(
+                map.getAnimals(),
+                map.getPlants().keySet(),
+                map.getWidth(),
+                map.getHeight()
+        );
+
+        List<AnimalSnapshot> animalSnapshots = map.getAnimals().stream()
+                .map(RuntimeAnimal::getSnapshot)
+                .toList();
+
+        return new SimulationSnapshot(
+                currentDay,
+                animalSnapshots,
+                new HashMap<>(map.getPlants()),
+                stats
+        );
+    }
+
+    private void spawnInitialAnimals() {
+        List<ChildData> initialData = map.initializeAnimalsData(params.initialAnimalCount());
+
+        for (ChildData data : initialData) {
+            RuntimeAnimal animal = repository.registerBirth(data, currentDay, random);
+            map.addAnimal(animal);
+        }
+    }
+
+    private void spawnInitialPlants() {
+        map.growPlants(params.initialPlantCount());
     }
 }

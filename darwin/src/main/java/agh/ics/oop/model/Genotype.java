@@ -1,5 +1,6 @@
 package agh.ics.oop.model;
 
+import java.util.Arrays;
 import java.util.Random;
 
 public class Genotype {
@@ -22,8 +23,9 @@ public class Genotype {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
-    public void mutate(int genesCount, Random random) {
+    public Genotype mutate(int genesCount, Random random) {
         // TODO: Randomly change 'genesCount' indices to new values [0-7]
+        return null;
     }
 
     public int similarity(Genotype other) {
@@ -33,5 +35,18 @@ public class Genotype {
 
     public int getGene(int index) {
         return genes[index % genes.length];
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Genotype genotype = (Genotype) o;
+        return Arrays.equals(genes, genotype.genes);
+    }
+
+    @Override
+    public int hashCode() {
+        return Arrays.hashCode(genes);
     }
 }

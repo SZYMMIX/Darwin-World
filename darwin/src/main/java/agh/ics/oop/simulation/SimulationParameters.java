@@ -13,7 +13,7 @@ public record SimulationParameters(
         int reproductionEnergyCost,
         int minMutations,
         int maxMutations,
-        int genomeLength,
+        int genotypeLength,
 
         boolean isPoisonMap,
         double poisonProbability,
