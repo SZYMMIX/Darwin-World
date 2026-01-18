@@ -16,6 +16,8 @@ public class SimulationEngine implements Runnable {
     private volatile boolean paused = true;
     private volatile int moveDelay = 200;
 
+    private final Object stepLock = new Object();
+
     public SimulationEngine(Simulation simulation) {
         this.simulation = simulation;
     }
@@ -28,10 +30,21 @@ public class SimulationEngine implements Runnable {
                 continue;
             }
 
-            SimulationSnapshot snapshot = simulation.step();
-            notifyObservers(snapshot);
+            performStep();
+
             sleep(moveDelay);
         }
+    }
+
+    private void performStep() {
+        synchronized (stepLock) {
+            SimulationSnapshot snapshot = simulation.step();
+            notifyObservers(snapshot);
+        }
+    }
+
+    public void requestSynchronousStep() {
+        performStep();
     }
 
     public void addObserver(Consumer<SimulationSnapshot> observer) {

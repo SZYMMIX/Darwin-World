@@ -37,6 +37,9 @@ public class SimulationPresenter {
         setupSidePanelListeners();
 
         SimulationSnapshot initialSnapshot = simulation.getSnapshot();
+        synchronized (history) {
+            history.add(initialSnapshot);
+        }
         updateView(initialSnapshot);
         view.getToolbar().setPlayPauseStatus(true);
 
@@ -166,11 +169,18 @@ public class SimulationPresenter {
 
         synchronized (history) {
             if (history.isEmpty()) return;
+
             int maxIndex = history.size() - 1;
             int currentIndex = (historyCursor == -1) ? maxIndex : historyCursor;
             int newIndex = currentIndex + direction;
 
-            if (newIndex >= 0 && newIndex <= maxIndex) {
+            if (newIndex > maxIndex) {
+                engine.requestSynchronousStep();
+                historyCursor = -1;
+                return;
+            }
+
+            if (newIndex >= 0) {
                 historyCursor = newIndex;
                 if (newIndex == maxIndex) historyCursor = -1;
                 updateView(history.get(newIndex));
