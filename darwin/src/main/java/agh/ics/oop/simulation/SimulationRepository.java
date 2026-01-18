@@ -2,6 +2,7 @@ package agh.ics.oop.simulation;
 
 import agh.ics.oop.model.AnimalDetails;
 import agh.ics.oop.model.Genotype;
+import agh.ics.oop.model.TrackedAnimalStats;
 import agh.ics.oop.model.Vector2d;
 
 import java.util.*;
@@ -10,6 +11,7 @@ class SimulationRepository {
     private final List<AnimalDetails> details = new ArrayList<>();
     private final List<Integer> deathDays = new ArrayList<>();
     private final List<List<Integer>> children = new ArrayList<>();
+    private final List<List<Integer>> eatenPlants = new ArrayList<>();
 
     private final Map<Genotype, Set<Integer>> genotypeFollowers = new HashMap<>();
 
@@ -28,6 +30,7 @@ class SimulationRepository {
         details.add(newDetails);
         deathDays.add(null);
         children.add(new ArrayList<>());
+        eatenPlants.add(new ArrayList<>());
 
         if (childData.parentAId() != null) children.get(childData.parentAId()).add(newId);
         if (childData.parentBId() != null) children.get(childData.parentBId()).add(newId);
@@ -52,6 +55,65 @@ class SimulationRepository {
                 genotypeFollowers.remove(attr.genotype());
             }
         }
+    }
+
+    void registerPlantConsumption(int id, int day) {
+        eatenPlants.get(id).add(day);
+    }
+
+    Optional<TrackedAnimalStats> getTrackedAnimalStats(int id, int currentDay, RuntimeAnimal currentRuntimeState) {
+        if (id < 0 || id >= details.size()) return Optional.empty();
+
+        AnimalDetails staticDetails = details.get(id);
+
+        Integer actualDeathDay = deathDays.get(id);
+        boolean isDeadAtThatDay = actualDeathDay != null && actualDeathDay <= currentDay;
+
+        int age;
+        if (isDeadAtThatDay) {
+            age = actualDeathDay - staticDetails.birthDay();
+        } else {
+            age = currentDay - staticDetails.birthDay();
+        }
+
+        int plantsEatenCount = (int) eatenPlants.get(id).stream()
+                .filter(day -> day <= currentDay)
+                .count();
+
+        List<Integer> childrenIds = children.get(id).stream()
+                .filter(childId -> details.get(childId).birthDay() <= currentDay)
+                .toList();
+        int childrenCount = childrenIds.size();
+
+        int descendantsCount = countDescendants(id, currentDay);
+
+        int energy = currentRuntimeState.getEnergy();
+        int activeGene = currentRuntimeState.getDetails().genotype().getGene(age);
+
+        return Optional.of(new TrackedAnimalStats(
+                id,
+                staticDetails.genotype(),
+                activeGene,
+                energy,
+                plantsEatenCount,
+                childrenCount,
+                descendantsCount,
+                age,
+                isDeadAtThatDay ? Optional.of(actualDeathDay) : Optional.empty()
+        ));
+    }
+
+    private int countDescendants(int rootId, int limitDay) {
+        int count = 0;
+        List<Integer> directChildren = children.get(rootId).stream()
+                .filter(childId -> details.get(childId).birthDay() <= limitDay)
+                .toList();
+
+        for (Integer childId : directChildren) {
+            count += 1 + countDescendants(childId, limitDay);
+        }
+
+        return count;
     }
 
     SimulationStats getStats(Set<RuntimeAnimal> liveAnimals, Set<Vector2d> plantsPositions, int width, int height) {

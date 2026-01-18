@@ -1,6 +1,6 @@
 package agh.ics.oop.app.components;
 
-import agh.ics.oop.app.model.AnimalViewModel;
+import agh.ics.oop.model.TrackedAnimalStats;
 import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
@@ -60,24 +60,21 @@ public class InspectorView extends VBox {
         return box;
     }
 
-    public void update(AnimalViewModel animal) {
-        if (animal.id() == -1) {
-            clear();
-            return;
-        }
+    public void update(TrackedAnimalStats animal) {
+        boolean isDead = animal.deathDay().isPresent();
 
-        statusLabel.setText(animal.isDead() ? "Zwierzak nie żyje." : "Zwierzak żyje.");
-        statusLabel.setStyle(animal.isDead() ? "-fx-text-fill: red;" : "-fx-text-fill: green;");
+        statusLabel.setText(isDead ? "Zwierzak nie żyje." : "Zwierzak żyje.");
+        statusLabel.setStyle(isDead ? "-fx-text-fill: red;" : "-fx-text-fill: green;");
 
         idLabel.setText(String.valueOf(animal.id()));
-        genotypeLabel.setText(animal.genotype() != null ? "Ukryty (kliknij)" : "-");
-        activeGeneLabel.setText(String.valueOf(animal.activeGeneIndex()));
+        genotypeLabel.setText(animal.genotype().toString());
+        activeGeneLabel.setText(String.valueOf(animal.activeGene()));
         energyLabel.setText(String.valueOf(animal.energy()));
         eatenPlantsLabel.setText(String.valueOf(animal.eatenPlants()));
         childrenLabel.setText(String.valueOf(animal.childrenCount()));
         descendantsLabel.setText(String.valueOf(animal.descendantsCount()));
 
-        if (animal.isDead() && animal.deathDay().isPresent()) {
+        if (isDead) {
             ageLabel.setText(animal.age() + " (Zmarł w dniu " + animal.deathDay().get() + ")");
         } else {
             ageLabel.setText(String.valueOf(animal.age()));

@@ -2,6 +2,7 @@ package agh.ics.oop.app;
 
 import agh.ics.oop.app.components.SimulationToolbar;
 import agh.ics.oop.app.model.AnimalViewModel;
+import agh.ics.oop.model.TrackedAnimalStats;
 import agh.ics.oop.simulation.GenotypeStat;
 import agh.ics.oop.simulation.Simulation;
 import agh.ics.oop.simulation.SimulationParameters;
@@ -128,27 +129,12 @@ public class SimulationPresenter {
             return;
         }
 
-        var trackedSnap = snapshot.animals().stream()
-                .filter(a -> a.id() == trackedAnimalId)
-                .findFirst();
+        Optional<TrackedAnimalStats> statsOpt = simulation.getAnimalDetails(trackedAnimalId);
 
-        if (trackedSnap.isPresent()) {
-            AnimalViewModel vm = new AnimalViewModel(
-                    trackedAnimalId,
-                    trackedSnap.get().position(),
-                    null,
-                    0,
-                    trackedSnap.get().energy(),
-                    0, 0, 0, 0,
-                    Optional.empty(),
-                    false
-            );
-            view.getSidebar().getInspectorView().update(vm);
+        if (statsOpt.isPresent()) {
+            view.getSidebar().getInspectorView().update(statsOpt.get());
         } else {
-            AnimalViewModel deadVm = new AnimalViewModel(
-                    trackedAnimalId, null, null, 0, 0, 0, 0, 0, 0, Optional.empty(), true
-            );
-            view.getSidebar().getInspectorView().update(deadVm);
+            view.getSidebar().getInspectorView().clear();
         }
     }
 

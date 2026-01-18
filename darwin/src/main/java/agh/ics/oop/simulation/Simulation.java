@@ -1,8 +1,6 @@
 package agh.ics.oop.simulation;
 
-import agh.ics.oop.model.AnimalSnapshot;
-import agh.ics.oop.model.Plant;
-import agh.ics.oop.model.Vector2d;
+import agh.ics.oop.model.*;
 
 import java.util.*;
 
@@ -39,6 +37,15 @@ public class Simulation {
 
     public SimulationSnapshot getSnapshot() {
         return createSnapshot();
+    }
+
+    public Optional<TrackedAnimalStats> getAnimalDetails(int animalId) {
+        RuntimeAnimal runtimeAnimal = map.getAnimals().stream()
+                .filter(a -> a.getId() == animalId)
+                .findFirst()
+                .orElse(null);
+
+        return repository.getTrackedAnimalStats(animalId, currentDay, runtimeAnimal);
     }
 
     private void removeDead() {
