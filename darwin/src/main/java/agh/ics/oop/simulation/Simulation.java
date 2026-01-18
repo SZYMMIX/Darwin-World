@@ -13,7 +13,7 @@ public class Simulation {
     private final InteractionHandler interactionHandler;
     private final Random random;
 
-    private int currentDay = -1;
+    private int currentDay = 0;
 
     public Simulation(SimulationParameters params) {
         this.params = params;
@@ -28,14 +28,16 @@ public class Simulation {
     }
 
     public SimulationSnapshot step() {
+        currentDay++;
         removeDead();
         moveAnimals();
         eatAndReproduce();
         map.growPlants(params.dailyPlantGrowth());
         applyDailyEnergyCost();
+        return createSnapshot();
+    }
 
-        currentDay++;
-
+    public SimulationSnapshot getSnapshot() {
         return createSnapshot();
     }
 

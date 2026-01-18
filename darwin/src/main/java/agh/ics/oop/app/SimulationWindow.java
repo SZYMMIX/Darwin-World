@@ -2,11 +2,9 @@ package agh.ics.oop.app;
 
 import agh.ics.oop.app.components.*;
 import agh.ics.oop.simulation.SimulationParameters;
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.SplitPane;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 public class SimulationWindow extends Stage {
@@ -19,7 +17,7 @@ public class SimulationWindow extends Stage {
     public SimulationWindow(SimulationParameters params) {
         setTitle("Darwin World - Symulacja");
 
-        this.mapVisualizer = new MapVisualizer(params.width(), params.height());
+        this.mapVisualizer = new MapVisualizer(params.width(), params.height(), params.reproductionEnergyMin());
         this.sidebar = new SimulationSidebar();
         this.toolbar = new SimulationToolbar();
 
@@ -27,22 +25,19 @@ public class SimulationWindow extends Stage {
         root.setTop(toolbar);
 
         SplitPane splitPane = new SplitPane();
-
-        VBox mapContainer = new VBox(mapVisualizer);
-        mapContainer.setAlignment(Pos.CENTER);
+        StackPane mapContainer = new StackPane(mapVisualizer);
         mapContainer.setStyle("-fx-background-color: #333;");
-        mapContainer.setMinWidth(400);
+        mapContainer.setMinWidth(300);
+        SplitPane.setResizableWithParent(mapContainer, true);
 
         splitPane.getItems().addAll(mapContainer, sidebar);
-        splitPane.setDividerPositions(0.7);
-
+        splitPane.setDividerPositions(0.75);
         root.setCenter(splitPane);
 
         Scene scene = new Scene(root, 1100, 750);
         setScene(scene);
 
         this.presenter = new SimulationPresenter(this, params);
-
         setOnCloseRequest(e -> presenter.onWindowClose());
     }
 
