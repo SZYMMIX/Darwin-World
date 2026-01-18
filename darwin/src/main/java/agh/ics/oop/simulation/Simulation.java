@@ -39,13 +39,13 @@ public class Simulation {
         return createSnapshot();
     }
 
-    public Optional<TrackedAnimalStats> getAnimalDetails(int animalId) {
+    public Optional<TrackedAnimalStats> getAnimalDetails(int animalId, int dayOfInterest) {
         RuntimeAnimal runtimeAnimal = map.getAnimals().stream()
                 .filter(a -> a.getId() == animalId)
                 .findFirst()
                 .orElse(null);
 
-        return repository.getTrackedAnimalStats(animalId, currentDay, runtimeAnimal);
+        return repository.getTrackedAnimalStats(animalId, dayOfInterest, runtimeAnimal);
     }
 
     private void removeDead() {

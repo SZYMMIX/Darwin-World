@@ -1,5 +1,6 @@
 package agh.ics.oop.app;
 
+import agh.ics.oop.app.components.InspectorView;
 import agh.ics.oop.app.components.SimulationToolbar;
 import agh.ics.oop.app.model.AnimalViewModel;
 import agh.ics.oop.model.TrackedAnimalStats;
@@ -9,10 +10,7 @@ import agh.ics.oop.simulation.SimulationParameters;
 import agh.ics.oop.simulation.SimulationSnapshot;
 import javafx.application.Platform;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class SimulationPresenter {
     private final SimulationWindow view;
@@ -70,7 +68,12 @@ public class SimulationPresenter {
         });
     }
 
-    private void setupSidePanelListeners() {}
+    private void setupSidePanelListeners() {
+        InspectorView inspector = view.getSidebar().getInspectorView();
+
+        inspector.getHighlightChildrenCheck().selectedProperty().addListener((obs, oldV, newV) -> updateFamilyHighlight());
+        inspector.getHighlightDescendantsCheck().selectedProperty().addListener((obs, oldV, newV) -> updateFamilyHighlight());
+    }
 
     private void handleAnimalSelection(Integer animalId) {
         this.trackedAnimalId = animalId;
@@ -94,6 +97,31 @@ public class SimulationPresenter {
             }
         } else {
             view.getMapVisualizer().setAnimalsWithDominantGenotype(Collections.emptyList());
+        }
+    }
+
+    private void updateFamilyHighlight() {
+        if (trackedAnimalId == null) {
+            view.getMapVisualizer().setHighlightedFamily(null, null);
+            return;
+        }
+
+        SimulationSnapshot snap = getCurrentSnapshot();
+        if (snap == null) return;
+
+        Optional<TrackedAnimalStats> statsOpt = simulation.getAnimalDetails(trackedAnimalId, snap.day());
+
+        if (statsOpt.isPresent()) {
+            TrackedAnimalStats stats = statsOpt.get();
+            InspectorView inspector = view.getSidebar().getInspectorView();
+
+            Set<Integer> children = inspector.getHighlightChildrenCheck().isSelected()
+                    ? stats.childrenIds() : Collections.emptySet();
+
+            Set<Integer> descendants = inspector.getHighlightDescendantsCheck().isSelected()
+                    ? stats.descendantsIds() : Collections.emptySet();
+
+            view.getMapVisualizer().setHighlightedFamily(children, descendants);
         }
     }
 
@@ -126,15 +154,18 @@ public class SimulationPresenter {
     private void updateInspector(SimulationSnapshot snapshot) {
         if (trackedAnimalId == null) {
             view.getSidebar().getInspectorView().clear();
+            view.getMapVisualizer().setHighlightedFamily(null, null);
             return;
         }
 
-        Optional<TrackedAnimalStats> statsOpt = simulation.getAnimalDetails(trackedAnimalId);
+        Optional<TrackedAnimalStats> statsOpt = simulation.getAnimalDetails(trackedAnimalId, snapshot.day());
 
         if (statsOpt.isPresent()) {
             view.getSidebar().getInspectorView().update(statsOpt.get());
+            updateFamilyHighlight();
         } else {
             view.getSidebar().getInspectorView().clear();
+            view.getMapVisualizer().setHighlightedFamily(null, null);
         }
     }
 

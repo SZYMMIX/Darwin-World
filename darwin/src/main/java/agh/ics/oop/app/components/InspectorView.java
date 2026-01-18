@@ -20,7 +20,9 @@ public class InspectorView extends VBox {
     private final Label descendantsLabel = new Label("-");
     private final Label ageLabel = new Label("-");
 
-    private final CheckBox showDescendantsCheckbox = new CheckBox("Pokaż potomków");
+    private final CheckBox highlightChildrenCheck = new CheckBox("Podświetl dzieci");
+    private final CheckBox highlightDescendantsCheck = new CheckBox("Podświetl wszystkich potomków");
+
     private final Button stopTrackingButton = new Button("Przestań śledzić");
 
     public InspectorView() {
@@ -34,7 +36,8 @@ public class InspectorView extends VBox {
         statusLabel.setStyle("-fx-font-style: italic; -fx-text-fill: gray;");
 
         stopTrackingButton.setVisible(false);
-        showDescendantsCheckbox.setDisable(true);
+        highlightChildrenCheck.setDisable(true);
+        highlightDescendantsCheck.setDisable(true);
 
         getChildren().addAll(
                 header,
@@ -47,9 +50,11 @@ public class InspectorView extends VBox {
                 createDetailRow("Zjedzone rośliny:", eatenPlantsLabel),
                 createDetailRow("Dzieci:", childrenLabel),
                 createDetailRow("Potomkowie:", descendantsLabel),
-                createDetailRow("Wiek / Dzień śmierci:", ageLabel),
+                createDetailRow("Wiek:", ageLabel),
                 new Separator(),
-                showDescendantsCheckbox,
+                highlightChildrenCheck,
+                highlightDescendantsCheck,
+                new Separator(),
                 stopTrackingButton
         );
     }
@@ -71,8 +76,8 @@ public class InspectorView extends VBox {
         activeGeneLabel.setText(String.valueOf(animal.activeGene()));
         energyLabel.setText(String.valueOf(animal.energy()));
         eatenPlantsLabel.setText(String.valueOf(animal.eatenPlants()));
-        childrenLabel.setText(String.valueOf(animal.childrenCount()));
-        descendantsLabel.setText(String.valueOf(animal.descendantsCount()));
+        childrenLabel.setText(String.valueOf(animal.childrenIds().size()));
+        descendantsLabel.setText(String.valueOf(animal.descendantsIds().size()));
 
         if (isDead) {
             ageLabel.setText(animal.age() + " (Zmarł w dniu " + animal.deathDay().get() + ")");
@@ -81,7 +86,8 @@ public class InspectorView extends VBox {
         }
 
         stopTrackingButton.setVisible(true);
-        showDescendantsCheckbox.setDisable(false);
+        highlightChildrenCheck.setDisable(false);
+        highlightDescendantsCheck.setDisable(false);
     }
 
     public void clear() {
@@ -97,15 +103,13 @@ public class InspectorView extends VBox {
         ageLabel.setText("-");
 
         stopTrackingButton.setVisible(false);
-        showDescendantsCheckbox.setDisable(true);
-        showDescendantsCheckbox.setSelected(false);
+        highlightChildrenCheck.setDisable(true);
+        highlightChildrenCheck.setSelected(false);
+        highlightDescendantsCheck.setDisable(true);
+        highlightDescendantsCheck.setSelected(false);
     }
 
-    public Button getStopTrackingButton() {
-        return stopTrackingButton;
-    }
-
-    public CheckBox getShowDescendantsCheckbox() {
-        return showDescendantsCheckbox;
-    }
+    public Button getStopTrackingButton() { return stopTrackingButton; }
+    public CheckBox getHighlightChildrenCheck() { return highlightChildrenCheck; }
+    public CheckBox getHighlightDescendantsCheck() { return highlightDescendantsCheck; }
 }

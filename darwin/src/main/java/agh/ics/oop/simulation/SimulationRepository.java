@@ -6,6 +6,7 @@ import agh.ics.oop.model.TrackedAnimalStats;
 import agh.ics.oop.model.Vector2d;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 class SimulationRepository {
     private final List<AnimalDetails> details = new ArrayList<>();
@@ -61,34 +62,35 @@ class SimulationRepository {
         eatenPlants.get(id).add(day);
     }
 
-    Optional<TrackedAnimalStats> getTrackedAnimalStats(int id, int currentDay, RuntimeAnimal currentRuntimeState) {
+    Optional<TrackedAnimalStats> getTrackedAnimalStats(int id, int dayOfInterest, RuntimeAnimal currentRuntimeState) {
         if (id < 0 || id >= details.size()) return Optional.empty();
 
         AnimalDetails staticDetails = details.get(id);
+        if (staticDetails.birthDay() > dayOfInterest) return Optional.empty();
 
         Integer actualDeathDay = deathDays.get(id);
-        boolean isDeadAtThatDay = actualDeathDay != null && actualDeathDay <= currentDay;
+        boolean isDeadAtThatDay = actualDeathDay != null && actualDeathDay <= dayOfInterest;
 
-        int age;
-        if (isDeadAtThatDay) {
-            age = actualDeathDay - staticDetails.birthDay();
-        } else {
-            age = currentDay - staticDetails.birthDay();
-        }
+        int age = isDeadAtThatDay ? actualDeathDay - staticDetails.birthDay() : dayOfInterest - staticDetails.birthDay();
 
         int plantsEatenCount = (int) eatenPlants.get(id).stream()
-                .filter(day -> day <= currentDay)
+                .filter(day -> day <= dayOfInterest)
                 .count();
 
-        List<Integer> childrenIds = children.get(id).stream()
-                .filter(childId -> details.get(childId).birthDay() <= currentDay)
-                .toList();
-        int childrenCount = childrenIds.size();
+        Set<Integer> childrenIds = children.get(id).stream()
+                .filter(childId -> details.get(childId).birthDay() <= dayOfInterest)
+                .collect(Collectors.toSet());
 
-        int descendantsCount = countDescendants(id, currentDay);
+        Set<Integer> descendantsIds = findAllDescendants(id, dayOfInterest);
 
-        int energy = currentRuntimeState.getEnergy();
-        int activeGene = currentRuntimeState.getDetails().genotype().getGene(age);
+        int energy = 0;
+        int activeGene = 0;
+        if (!isDeadAtThatDay && currentRuntimeState != null && currentRuntimeState.getId() == id) {
+            energy = currentRuntimeState.getEnergy();
+        }
+        if (!isDeadAtThatDay) {
+            activeGene = staticDetails.genotype().getGene(age);
+        }
 
         return Optional.of(new TrackedAnimalStats(
                 id,
@@ -96,24 +98,40 @@ class SimulationRepository {
                 activeGene,
                 energy,
                 plantsEatenCount,
-                childrenCount,
-                descendantsCount,
+                childrenIds,
+                descendantsIds,
                 age,
                 isDeadAtThatDay ? Optional.of(actualDeathDay) : Optional.empty()
         ));
     }
 
-    private int countDescendants(int rootId, int limitDay) {
-        int count = 0;
-        List<Integer> directChildren = children.get(rootId).stream()
-                .filter(childId -> details.get(childId).birthDay() <= limitDay)
+    private Set<Integer> findAllDescendants(int rootId, int limitDay) {
+        Set<Integer> descendants = new HashSet<>();
+        Queue<Integer> toVisit = new LinkedList<>();
+
+        List<Integer> firstLevel = children.get(rootId).stream()
+                .filter(cid -> details.get(cid).birthDay() <= limitDay)
                 .toList();
 
-        for (Integer childId : directChildren) {
-            count += 1 + countDescendants(childId, limitDay);
+        toVisit.addAll(firstLevel);
+
+        while (!toVisit.isEmpty()) {
+            Integer currentId = toVisit.poll();
+
+            if (descendants.contains(currentId)) {
+                continue;
+            }
+
+            descendants.add(currentId);
+
+            List<Integer> nextGeneration = children.get(currentId).stream()
+                    .filter(cid -> details.get(cid).birthDay() <= limitDay)
+                    .toList();
+
+            toVisit.addAll(nextGeneration);
         }
 
-        return count;
+        return descendants;
     }
 
     SimulationStats getStats(Set<RuntimeAnimal> liveAnimals, Set<Vector2d> plantsPositions, int width, int height) {

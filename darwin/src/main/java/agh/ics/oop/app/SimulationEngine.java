@@ -31,16 +31,16 @@ public class SimulationEngine implements Runnable {
             }
 
             performStep();
-
             sleep(moveDelay);
         }
     }
 
     private void performStep() {
+        SimulationSnapshot snapshot;
         synchronized (stepLock) {
-            SimulationSnapshot snapshot = simulation.step();
-            notifyObservers(snapshot);
+            snapshot = simulation.step();
         }
+        notifyObservers(snapshot);
     }
 
     public void requestSynchronousStep() {

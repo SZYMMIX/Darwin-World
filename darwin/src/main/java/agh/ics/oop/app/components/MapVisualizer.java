@@ -21,6 +21,9 @@ public class MapVisualizer extends Pane {
 
     private Integer trackedAnimalId = null;
     private Set<Integer> animalsWithDominantGenotype = new HashSet<>();
+    private Set<Integer> highlightedChildren = new HashSet<>();
+    private Set<Integer> highlightedDescendants = new HashSet<>();
+
     private SimulationSnapshot lastSnapshot = null;
 
     private static final Color COLOR_LOW_ENERGY = Color.RED;
@@ -50,11 +53,13 @@ public class MapVisualizer extends Pane {
     }
 
     public void setAnimalsWithDominantGenotype(List<Integer> animalIds) {
-        if (animalIds == null) {
-            this.animalsWithDominantGenotype.clear();
-        } else {
-            this.animalsWithDominantGenotype = new HashSet<>(animalIds);
-        }
+        this.animalsWithDominantGenotype = (animalIds == null) ? new HashSet<>() : new HashSet<>(animalIds);
+        drawLastSnapshot();
+    }
+
+    public void setHighlightedFamily(Set<Integer> children, Set<Integer> descendants) {
+        this.highlightedChildren = (children == null) ? new HashSet<>() : new HashSet<>(children);
+        this.highlightedDescendants = (descendants == null) ? new HashSet<>() : new HashSet<>(descendants);
         drawLastSnapshot();
     }
 
@@ -145,14 +150,26 @@ public class MapVisualizer extends Pane {
     private void drawSingleAnimal(double x, double y, double size, AnimalSnapshot animal) {
         double padding = size * 0.05;
         double realSize = size - (2 * padding);
+        int aid = animal.id();
 
-        if (animalsWithDominantGenotype.contains(animal.id())) {
+        if (animalsWithDominantGenotype.contains(aid)) {
             gc.setStroke(Color.GOLD);
             gc.setLineWidth(Math.max(2.0, size * 0.15));
             gc.strokeOval(x + padding, y + padding, realSize, realSize);
         }
 
-        if (trackedAnimalId != null && trackedAnimalId.equals(animal.id())) {
+        if (highlightedChildren.contains(aid)) {
+            gc.setStroke(Color.CYAN);
+            gc.setLineWidth(Math.max(2.0, size * 0.15));
+            gc.strokeOval(x + padding, y + padding, realSize, realSize);
+        }
+        else if (highlightedDescendants.contains(aid)) {
+            gc.setStroke(Color.MEDIUMPURPLE);
+            gc.setLineWidth(Math.max(2.0, size * 0.15));
+            gc.strokeOval(x + padding, y + padding, realSize, realSize);
+        }
+
+        if (trackedAnimalId != null && trackedAnimalId.equals(aid)) {
             gc.setStroke(Color.MAGENTA);
             gc.setLineWidth(Math.max(3.0, size * 0.125));
             gc.strokeOval(x + padding, y + padding, realSize, realSize);
@@ -183,14 +200,9 @@ public class MapVisualizer extends Pane {
 
         double offsetX = (w - (mapWidth * cellSize)) / 2.0;
         double offsetY = (h - (mapHeight * cellSize)) / 2.0;
+        double relativeX = mouseX - offsetX; double relativeY = mouseY - offsetY;
 
-        double relativeX = mouseX - offsetX;
-        double relativeY = mouseY - offsetY;
-
-        if (relativeX < 0 || relativeX >= mapWidth * cellSize ||
-                relativeY < 0 || relativeY >= mapHeight * cellSize) {
-            return null;
-        }
+        if (relativeX < 0 || relativeX >= mapWidth * cellSize || relativeY < 0 || relativeY >= mapHeight * cellSize) return null;
 
         int gridX = (int) (relativeX / cellSize);
         int gridY = (int) (relativeY / cellSize);

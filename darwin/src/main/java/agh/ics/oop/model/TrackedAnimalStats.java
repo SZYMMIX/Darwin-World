@@ -1,6 +1,7 @@
 package agh.ics.oop.model;
 
 import java.util.Optional;
+import java.util.Set;
 
 public record TrackedAnimalStats(
         int id,
@@ -8,8 +9,8 @@ public record TrackedAnimalStats(
         int activeGene,
         int energy,
         int eatenPlants,
-        int childrenCount,
-        int descendantsCount,
+        Set<Integer> childrenIds,
+        Set<Integer> descendantsIds,
         int age,
         Optional<Integer> deathDay
 ) {}
