@@ -40,7 +40,7 @@ class SimulationIntegrationTest {
 
         SimulationSnapshot snapshot = simulation.step();
 
-        assertEquals(0, snapshot.day());
+        assertEquals(1, snapshot.day());
         assertEquals(1, snapshot.animals().size());
 
         assertNotNull(snapshot.animals().get(0).position());
@@ -183,7 +183,7 @@ class SimulationIntegrationTest {
         SimulationSnapshot snapshot = simulation.step();
 
         assertNotNull(snapshot);
-        assertEquals(0, snapshot.day());
+        assertEquals(1, snapshot.day());
 
         assertEquals(initialAnimals, snapshot.animals().size());
         assertEquals(initialPlants, snapshot.plants().size());
