@@ -2,7 +2,7 @@ package agh.ics.oop.app;
 
 import agh.ics.oop.app.components.InspectorView;
 import agh.ics.oop.app.components.SimulationToolbar;
-import agh.ics.oop.app.model.AnimalViewModel;
+import agh.ics.oop.app.components.StatisticsSaver;
 import agh.ics.oop.model.Genotype;
 import agh.ics.oop.model.TrackedAnimalStats;
 import agh.ics.oop.simulation.GenotypeStat;
@@ -10,7 +10,11 @@ import agh.ics.oop.simulation.Simulation;
 import agh.ics.oop.simulation.SimulationParameters;
 import agh.ics.oop.simulation.SimulationSnapshot;
 import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+import javafx.stage.FileChooser;
 
+import java.io.File;
 import java.util.*;
 
 public class SimulationPresenter {
@@ -149,17 +153,12 @@ public class SimulationPresenter {
 
     private void updateView(SimulationSnapshot snapshot) {
         updateHighlightFilters(snapshot);
-
         view.getMapVisualizer().draw(snapshot);
         view.getToolbar().getDayLabel().setText("Dzień: " + snapshot.day());
         view.getSidebar().getStatsView().update(snapshot.stats());
 
         if (historyCursor == -1) {
-            view.getSidebar().getChartView().addDataPoint(
-                    snapshot.day(),
-                    snapshot.stats().currentAnimalsCount(),
-                    snapshot.stats().currentPlantsCount()
-            );
+            view.getSidebar().getChartView().addDataPoint(snapshot.day(), snapshot.stats());
         }
 
         updateInspector(snapshot);
@@ -219,7 +218,37 @@ public class SimulationPresenter {
         }
     }
 
-    public void onWindowClose() { engine.stop(); }
+    public void onWindowClose() {
+        engine.stop();
+
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("Koniec symulacji");
+        alert.setHeaderText("Czy chcesz zapisać statystyki do pliku CSV?");
+        alert.setContentText("Wybierz opcję:");
+
+        ButtonType buttonTypeYes = new ButtonType("Tak, zapisz");
+        ButtonType buttonTypeNo = new ButtonType("Nie");
+        alert.getButtonTypes().setAll(buttonTypeYes, buttonTypeNo);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == buttonTypeYes) {
+            showSaveFileDialog();
+        }
+    }
+
+    private void showSaveFileDialog() {
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Zapisz statystyki");
+        fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Pliki CSV", "*.csv"));
+
+        fileChooser.setInitialFileName("statystyki_" + System.currentTimeMillis() + ".csv");
+
+        File file = fileChooser.showSaveDialog(view);
+        if (file != null) {
+            List<agh.ics.oop.simulation.SimulationStats> allStats = view.getSidebar().getChartView().getAllStatsHistory();
+            StatisticsSaver.saveToFile(file, allStats);
+        }
+    }
 
     private SimulationSnapshot getCurrentSnapshot() {
         synchronized (history) {

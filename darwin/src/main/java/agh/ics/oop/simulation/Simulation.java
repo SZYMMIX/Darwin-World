@@ -1,6 +1,7 @@
 package agh.ics.oop.simulation;
 
 import agh.ics.oop.model.*;
+import agh.ics.oop.util.VisibleForTests;
 
 import java.util.*;
 
