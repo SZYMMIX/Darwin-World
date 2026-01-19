@@ -135,47 +135,14 @@ class SimulationRepository {
     }
 
     SimulationStats getStats(Set<RuntimeAnimal> liveAnimals, Set<Vector2d> plantsPositions, int width, int height) {
-        double avgEnergy = 0.0;
-        double avgChildren = 0.0;
-
-        if (!liveAnimals.isEmpty()) {
-            long energySum = 0;
-            long childrenSum = 0;
-            for (RuntimeAnimal a : liveAnimals) {
-                energySum += a.getEnergy();
-                childrenSum += a.getChildrenCount();
-            }
-            avgEnergy = (double) energySum / liveAnimals.size();
-            avgChildren = (double) childrenSum / liveAnimals.size();
-        }
-
-        double avgLifespan = deadCount == 0 ? 0.0 : (double) totalDeadLifeSpan / deadCount;
-
-        Set<Vector2d> occupiedPositions = new HashSet<>(plantsPositions);
-        for (RuntimeAnimal a : liveAnimals) {
-            occupiedPositions.add(a.getPosition());
-        }
-        int totalFields = width * height;
-        int freeFields = Math.max(0, totalFields - occupiedPositions.size());
-
-        List<GenotypeStat> topGenotypes = genotypeFollowers.entrySet().stream()
-                .filter(entry -> !entry.getValue().isEmpty())
-                .sorted((e1, e2) -> Integer.compare(e2.getValue().size(), e1.getValue().size()))
-                .limit(5)
-                .map(entry -> new GenotypeStat(
-                        entry.getKey(),
-                        new ArrayList<>(entry.getValue())
-                ))
-                .toList();
-
-        return new SimulationStats(
-                liveAnimals.size(),
-                plantsPositions.size(),
-                freeFields,
-                topGenotypes,
-                avgEnergy,
-                avgLifespan,
-                avgChildren
+        return StatisticsCalculator.calculate(
+                liveAnimals,
+                plantsPositions,
+                this.genotypeFollowers,
+                this.deadCount,
+                this.totalDeadLifeSpan,
+                width,
+                height
         );
     }
 
