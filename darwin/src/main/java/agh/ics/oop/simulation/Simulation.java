@@ -13,16 +13,21 @@ public class Simulation {
 
     private int currentDay = 0;
 
-    public Simulation(SimulationParameters params) {
+    @VisibleForTests
+    Simulation(SimulationParameters params, Random random) {
         this.params = params;
         this.repository = new SimulationRepository();
-        this.random = new Random();
+        this.random = random;
 
         this.map = new WorldMap(params, random);
         this.interactionHandler = new InteractionHandler(params, random);
 
         spawnInitialAnimals();
         spawnInitialPlants();
+    }
+
+    public Simulation(SimulationParameters params) {
+        this(params, new Random());
     }
 
     public SimulationSnapshot step() {
