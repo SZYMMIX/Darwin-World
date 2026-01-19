@@ -24,11 +24,13 @@ public class MapVisualizer extends Pane {
     private Set<Integer> highlightedChildren = new HashSet<>();
     private Set<Integer> highlightedDescendants = new HashSet<>();
 
-    private SimulationSnapshot lastSnapshot = null;
+    private static final Color COLOR_STEPPE = Color.web("#fff9c4");
+    private static final Color COLOR_JUNGLE = Color.web("#c8e6c9");
+    private static final Color COLOR_PLANT_NORMAL = Color.FORESTGREEN;
+    private static final Color COLOR_PLANT_POISON = Color.web("#8e24aa");
+    private static final Color COLOR_BACKGROUND = Color.web("#222");
 
-    private static final Color COLOR_LOW_ENERGY = Color.RED;
-    private static final Color COLOR_HIGH_ENERGY = Color.web("#4e342e");
-    private static final Color COLOR_DEAD = Color.web("#dddddd");
+    private SimulationSnapshot lastSnapshot = null;
 
     public MapVisualizer(int mapWidth, int mapHeight, int reproductionMinEnergy) {
         this.mapWidth = mapWidth;
@@ -76,74 +78,76 @@ public class MapVisualizer extends Pane {
         if (w <= 0 || h <= 0) return;
 
         gc.clearRect(0, 0, w, h);
-        gc.setFill(Color.web("#222"));
+        gc.setFill(COLOR_BACKGROUND);
         gc.fillRect(0, 0, w, h);
 
-        double cellW = w / mapWidth;
-        double cellH = h / mapHeight;
-        double cellSize = Math.min(cellW, cellH);
+        GridMetrics m = calculateMetrics(w, h);
 
-        double drawWidth = mapWidth * cellSize;
-        double drawHeight = mapHeight * cellSize;
-
-        double offsetX = (w - drawWidth) / 2.0;
-        double offsetY = (h - drawHeight) / 2.0;
-
-        drawTerrains(offsetX, offsetY, cellSize);
-        drawPlants(offsetX, offsetY, cellSize);
-        drawAnimals(offsetX, offsetY, cellSize);
+        drawTerrains(m);
+        drawPlants(m);
+        drawAnimals(m);
     }
 
-    private void drawTerrains(double ox, double oy, double sz) {
-        gc.setFill(Color.web("#fff9c4"));
-        gc.fillRect(ox, oy, mapWidth * sz, mapHeight * sz);
+    private void drawTerrains(GridMetrics m) {
+        gc.setFill(COLOR_STEPPE);
+        gc.fillRect(m.offsetX, m.offsetY, mapWidth * m.cellSize, mapHeight * m.cellSize);
 
-        gc.setFill(Color.web("#c8e6c9"));
+        gc.setFill(COLOR_JUNGLE);
         double jungleH = mapHeight * 0.2;
         double jungleY = (mapHeight - jungleH) / 2.0;
-        gc.fillRect(ox, oy + (jungleY * sz), mapWidth * sz, jungleH * sz);
+
+        gc.fillRect(m.offsetX, m.offsetY + (jungleY * m.cellSize),
+                mapWidth * m.cellSize, jungleH * m.cellSize);
     }
 
-    private void drawPlants(double ox, double oy, double sz) {
+    private void drawPlants(GridMetrics m) {
         for (var entry : lastSnapshot.plants().entrySet()) {
             Vector2d pos = entry.getKey();
             Plant plant = entry.getValue();
 
-            gc.setFill(plant.isPoisonous() ? Color.web("#8e24aa") : Color.FORESTGREEN);
+            gc.setFill(plant.isPoisonous() ? COLOR_PLANT_POISON : COLOR_PLANT_NORMAL);
 
-            double pSize = sz * 0.6;
-            double pOffset = (sz - pSize) / 2.0;
-            gc.fillOval(ox + pos.x() * sz + pOffset, oy + pos.y() * sz + pOffset, pSize, pSize);
+            double pSize = m.cellSize * 0.6;
+            double pOffset = (m.cellSize - pSize) / 2.0;
+
+            gc.fillOval(m.offsetX + pos.x() * m.cellSize + pOffset,
+                    m.offsetY + pos.y() * m.cellSize + pOffset,
+                    pSize, pSize);
         }
     }
 
-    private void drawAnimals(double ox, double oy, double sz) {
+    private void drawAnimals(GridMetrics m) {
         Map<Vector2d, List<AnimalSnapshot>> grouped = lastSnapshot.animals().stream()
                 .collect(Collectors.groupingBy(AnimalSnapshot::position));
 
         for (var entry : grouped.entrySet()) {
-            Vector2d pos = entry.getKey();
-            List<AnimalSnapshot> group = entry.getValue();
-            group.sort((a, b) -> Integer.compare(b.energy(), a.energy()));
+            drawAnimalGroup(entry.getKey(), entry.getValue(), m);
+        }
+    }
 
-            int count = group.size();
-            int rows, cols;
-            if (count == 1) { rows = 1; cols = 1; }
-            else if (count <= 4) { rows = 2; cols = 2; }
-            else { rows = 3; cols = 3; }
+    private void drawAnimalGroup(Vector2d pos, List<AnimalSnapshot> group, GridMetrics m) {
+        group.sort((a, b) -> Integer.compare(b.energy(), a.energy()));
 
-            double subSize = sz / Math.max(rows, cols);
-            int limit = Math.min(count, rows * cols);
+        int count = group.size();
 
-            for (int i = 0; i < limit; i++) {
-                AnimalSnapshot animal = group.get(i);
-                int r = i / cols;
-                int c = i % cols;
-                double px = ox + (pos.x() * sz) + (c * subSize);
-                double py = oy + (pos.y() * sz) + (r * subSize);
+        int rows, cols;
+        if (count == 1) { rows = 1; cols = 1; }
+        else if (count <= 4) { rows = 2; cols = 2; }
+        else { rows = 3; cols = 3; }
 
-                drawSingleAnimal(px, py, subSize, animal);
-            }
+        double subSize = m.cellSize / Math.max(rows, cols);
+        int limit = Math.min(count, rows * cols);
+
+        for (int i = 0; i < limit; i++) {
+            AnimalSnapshot animal = group.get(i);
+
+            int r = i / cols;
+            int c = i % cols;
+
+            double px = m.offsetX + (pos.x() * m.cellSize) + (c * subSize);
+            double py = m.offsetY + (pos.y() * m.cellSize) + (r * subSize);
+
+            drawSingleAnimal(px, py, subSize, animal);
         }
     }
 
@@ -175,37 +179,26 @@ public class MapVisualizer extends Pane {
             gc.strokeOval(x + padding, y + padding, realSize, realSize);
         }
 
-        Color bodyColor = calculateColor(animal.energy());
+        Color bodyColor = EnergyColorProvider.calculateColor(animal.energy(), reproductionMinEnergy);
         gc.setFill(bodyColor);
         gc.fillOval(x + padding, y + padding, realSize, realSize);
-    }
-
-    private Color calculateColor(int energy) {
-        if (energy <= 0) return COLOR_DEAD;
-
-        double maxVisualEnergy = reproductionMinEnergy * 2.0;
-        double ratio = Math.min(1.0, (double) energy / maxVisualEnergy);
-
-        return COLOR_LOW_ENERGY.interpolate(COLOR_HIGH_ENERGY, ratio);
     }
 
     public Integer getAnimalIdAt(double mouseX, double mouseY, SimulationSnapshot snapshot) {
         if (snapshot == null) return null;
 
-        double w = getWidth();
-        double h = getHeight();
-        double cellW = w / mapWidth;
-        double cellH = h / mapHeight;
-        double cellSize = Math.min(cellW, cellH);
+        GridMetrics m = calculateMetrics(getWidth(), getHeight());
 
-        double offsetX = (w - (mapWidth * cellSize)) / 2.0;
-        double offsetY = (h - (mapHeight * cellSize)) / 2.0;
-        double relativeX = mouseX - offsetX; double relativeY = mouseY - offsetY;
+        double relativeX = mouseX - m.offsetX;
+        double relativeY = mouseY - m.offsetY;
 
-        if (relativeX < 0 || relativeX >= mapWidth * cellSize || relativeY < 0 || relativeY >= mapHeight * cellSize) return null;
+        if (relativeX < 0 || relativeX >= mapWidth * m.cellSize ||
+                relativeY < 0 || relativeY >= mapHeight * m.cellSize) {
+            return null;
+        }
 
-        int gridX = (int) (relativeX / cellSize);
-        int gridY = (int) (relativeY / cellSize);
+        int gridX = (int) (relativeX / m.cellSize);
+        int gridY = (int) (relativeY / m.cellSize);
         Vector2d clickPos = new Vector2d(gridX, gridY);
 
         List<AnimalSnapshot> animalsOnTile = snapshot.animals().stream()
@@ -221,10 +214,10 @@ public class MapVisualizer extends Pane {
         else if (count <= 4) { rows = 2; cols = 2; }
         else { rows = 3; cols = 3; }
 
-        double subSize = cellSize / Math.max(rows, cols);
+        double subSize = m.cellSize / Math.max(rows, cols);
 
-        double localX = relativeX % cellSize;
-        double localY = relativeY % cellSize;
+        double localX = relativeX % m.cellSize;
+        double localY = relativeY % m.cellSize;
 
         int subCol = (int) (localX / subSize);
         int subRow = (int) (localY / subSize);
@@ -239,4 +232,21 @@ public class MapVisualizer extends Pane {
     }
 
     public Canvas getCanvas() { return canvas; }
+
+    private record GridMetrics(double cellSize, double offsetX, double offsetY) {}
+
+    private GridMetrics calculateMetrics(double width, double height) {
+        double cellW = width / mapWidth;
+        double cellH = height / mapHeight;
+        double cellSize = Math.min(cellW, cellH);
+
+        double drawWidth = mapWidth * cellSize;
+        double drawHeight = mapHeight * cellSize;
+
+        double offsetX = (width - drawWidth) / 2.0;
+        double offsetY = (height - drawHeight) / 2.0;
+
+        return new GridMetrics(cellSize, offsetX, offsetY);
+    }
+
 }

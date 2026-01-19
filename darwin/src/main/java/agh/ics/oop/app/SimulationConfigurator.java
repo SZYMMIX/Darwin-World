@@ -51,40 +51,22 @@ public class SimulationConfigurator {
 
         mainLayout.getChildren().addAll(
                 createSectionHeader("1. Mapa"),
-                createGrid(
-                        "Szerokość:", widthSpinner,
-                        "Wysokość:", heightSpinner
-                ),
+                buildMapSection(),
 
                 createSectionHeader("2. Rośliny"),
-                createGrid(
-                        "Startowa liczba:", initialPlantCountSpinner,
-                        "Energia z rośliny:", plantEnergySpinner,
-                        "Dzienny wzrost:", dailyPlantGrowthSpinner
-                ),
+                buildPlantsSection(),
 
                 createSectionHeader("3. Zwierzęta"),
-                createGrid(
-                        "Startowa liczba:", initialAnimalCountSpinner,
-                        "Startowa energia:", initialAnimalEnergySpinner
-                ),
+                buildAnimalsSection(),
 
                 createSectionHeader("4. Fizjologia"),
-                createGrid(
-                        "Koszt energii dnia:", dailyEnergyCostSpinner,
-                        "Min. energia do rozmnażania:", reproductionEnergyMinSpinner,
-                        "Koszt energii rozmnażania:", reproductionEnergyCostSpinner
-                ),
+                buildPhysiologySection(),
 
                 createSectionHeader("5. Genetyka"),
-                createGrid(
-                        "Długość genotypu:", genotypeLengthSpinner,
-                        "Min. mutacji:", minMutationsSpinner,
-                        "Max. mutacji:", maxMutationsSpinner
-                ),
+                buildGeneticsSection(),
 
                 createSectionHeader("6. Wariant: Trucizna"),
-                createPoisonSection(),
+                buildPoisonSection(),
 
                 new Separator(),
                 createButtons()
@@ -94,26 +76,6 @@ public class SimulationConfigurator {
         Scene scene = new Scene(scrollPane, 550, 800);
         primaryStage.setScene(scene);
         primaryStage.show();
-    }
-
-    private VBox createPoisonSection() {
-        VBox box = new VBox(10);
-        box.setPadding(new Insets(5, 0, 0, 0));
-
-        poisonProbabilitySlider.setShowTickLabels(true);
-        poisonProbabilitySlider.setShowTickMarks(true);
-        poisonProbabilitySlider.setMajorTickUnit(0.25f);
-        poisonProbabilitySlider.setBlockIncrement(0.05f);
-
-        GridPane grid = createGrid(
-                "Prawdopodobieństwo:", poisonProbabilitySlider,
-                "Koszt zatrucia:", poisonEnergyCostSpinner
-        );
-
-        grid.disableProperty().bind(poisonMapCheckBox.selectedProperty().not());
-
-        box.getChildren().addAll(poisonMapCheckBox, grid);
-        return box;
     }
 
     private HBox createButtons() {
@@ -258,28 +220,79 @@ public class SimulationConfigurator {
         return label;
     }
 
-    private GridPane createGrid(Object... content) {
+    private void addParameter(GridPane grid, int row, String labelText, Control control) {
+        grid.add(new Label(labelText), 0, row);
+        grid.add(control, 1, row);
+    }
+
+    private GridPane createSectionGrid() {
         GridPane grid = new GridPane();
         grid.setHgap(15);
         grid.setVgap(10);
 
         ColumnConstraints col1 = new ColumnConstraints();
         col1.setMinWidth(150);
-
         ColumnConstraints col2 = new ColumnConstraints();
         col2.setHgrow(Priority.ALWAYS);
-
         grid.getColumnConstraints().addAll(col1, col2);
 
-        int row = 0;
-        for (int i = 0; i < content.length; i += 2) {
-            String labelText = (String) content[i];
-            Control control = (Control) content[i + 1];
-
-            grid.add(new Label(labelText), 0, row);
-            grid.add(control, 1, row);
-            row++;
-        }
         return grid;
+    }
+
+    private GridPane buildMapSection() {
+        GridPane grid = createSectionGrid();
+        addParameter(grid, 0, "Szerokość:", widthSpinner);
+        addParameter(grid, 1, "Wysokość:", heightSpinner);
+        return grid;
+    }
+
+    private GridPane buildPlantsSection() {
+        GridPane grid = createSectionGrid();
+        addParameter(grid, 0, "Startowa liczba:", initialPlantCountSpinner);
+        addParameter(grid, 1, "Energia z rośliny:", plantEnergySpinner);
+        addParameter(grid, 2, "Dzienny wzrost:", dailyPlantGrowthSpinner);
+        return grid;
+    }
+
+    private GridPane buildAnimalsSection() {
+        GridPane grid = createSectionGrid();
+        addParameter(grid, 0, "Startowa liczba:", initialAnimalCountSpinner);
+        addParameter(grid, 1, "Startowa energia:", initialAnimalEnergySpinner);
+        return grid;
+    }
+
+    private GridPane buildPhysiologySection() {
+        GridPane grid = createSectionGrid();
+        addParameter(grid, 0, "Koszt energii dnia:", dailyEnergyCostSpinner);
+        addParameter(grid, 1, "Min. energia do rozmnażania:", reproductionEnergyMinSpinner);
+        addParameter(grid, 2, "Koszt energii rozmnażania:", reproductionEnergyCostSpinner);
+        return grid;
+    }
+
+    private GridPane buildGeneticsSection() {
+        GridPane grid = createSectionGrid();
+        addParameter(grid, 0, "Długość genotypu:", genotypeLengthSpinner);
+        addParameter(grid, 1, "Min. mutacji:", minMutationsSpinner);
+        addParameter(grid, 2, "Max. mutacji:", maxMutationsSpinner);
+        return grid;
+    }
+
+    private VBox buildPoisonSection() {
+        VBox box = new VBox(10);
+        box.setPadding(new Insets(5, 0, 0, 0));
+
+        poisonProbabilitySlider.setShowTickLabels(true);
+        poisonProbabilitySlider.setShowTickMarks(true);
+        poisonProbabilitySlider.setMajorTickUnit(0.25f);
+        poisonProbabilitySlider.setBlockIncrement(0.05f);
+
+        GridPane grid = createSectionGrid();
+        addParameter(grid, 0, "Prawdopodobieństwo:", poisonProbabilitySlider);
+        addParameter(grid, 1, "Koszt zatrucia:", poisonEnergyCostSpinner);
+
+        grid.disableProperty().bind(poisonMapCheckBox.selectedProperty().not());
+
+        box.getChildren().addAll(poisonMapCheckBox, grid);
+        return box;
     }
 }
