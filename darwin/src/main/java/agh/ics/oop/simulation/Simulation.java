@@ -3,6 +3,7 @@ package agh.ics.oop.simulation;
 import agh.ics.oop.model.AnimalSnapshot;
 import agh.ics.oop.model.Plant;
 import agh.ics.oop.model.Vector2d;
+import agh.ics.oop.util.VisibleForTests;
 
 import java.util.*;
 
@@ -15,16 +16,21 @@ public class Simulation {
 
     private int currentDay = -1;
 
-    public Simulation(SimulationParameters params) {
+    @VisibleForTests
+    Simulation(SimulationParameters params, Random random) {
         this.params = params;
         this.repository = new SimulationRepository();
-        this.random = new Random();
+        this.random = random;
 
         this.map = new WorldMap(params, random);
         this.interactionHandler = new InteractionHandler(params, random);
 
         spawnInitialAnimals();
         spawnInitialPlants();
+    }
+
+    public Simulation(SimulationParameters params) {
+        this(params, new Random());
     }
 
     public SimulationSnapshot step() {
