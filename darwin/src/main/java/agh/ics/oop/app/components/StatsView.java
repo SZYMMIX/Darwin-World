@@ -4,6 +4,7 @@ import agh.ics.oop.simulation.GenotypeStat;
 import agh.ics.oop.simulation.SimulationStats;
 import javafx.geometry.Insets;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.VBox;
@@ -16,7 +17,8 @@ public class StatsView extends VBox {
     private final Label avgEnergy = new Label("-");
     private final Label avgLifespan = new Label("-");
     private final Label avgChildren = new Label("-");
-    private final ListView<String> topGenotypes = new ListView<>();
+
+    private final ListView<GenotypeStat> topGenotypes = new ListView<>();
 
     public StatsView() {
         setSpacing(10);
@@ -26,6 +28,17 @@ public class StatsView extends VBox {
         header.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
 
         topGenotypes.setPrefHeight(150);
+        topGenotypes.setCellFactory(param -> new ListCell<>() {
+            @Override
+            protected void updateItem(GenotypeStat item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                } else {
+                    setText(String.format("%s (n=%d)", item.genotype().toString(), item.animalIds().size()));
+                }
+            }
+        });
 
         getChildren().addAll(
                 header,
@@ -61,15 +74,10 @@ public class StatsView extends VBox {
         avgLifespan.setText(String.format("%.2f", stats.averageLifespan()));
         avgChildren.setText(String.format("%.2f", stats.averageChildren()));
 
-        topGenotypes.getItems().clear();
-        for (GenotypeStat stat : stats.topGenotypes()) {
-            topGenotypes.getItems().add(
-                    "Genotyp (n=" + stat.animalIds().size() + ")"
-            );
-        }
+        topGenotypes.getItems().setAll(stats.topGenotypes());
     }
 
-    public ListView<String> getTopGenotypesList() {
+    public ListView<GenotypeStat> getTopGenotypesList() {
         return topGenotypes;
     }
 }

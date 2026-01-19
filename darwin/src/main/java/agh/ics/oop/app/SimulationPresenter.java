@@ -73,6 +73,16 @@ public class SimulationPresenter {
 
         inspector.getHighlightChildrenCheck().selectedProperty().addListener((obs, oldV, newV) -> updateFamilyHighlight());
         inspector.getHighlightDescendantsCheck().selectedProperty().addListener((obs, oldV, newV) -> updateFamilyHighlight());
+
+        view.getSidebar().getStatsView().getTopGenotypesList()
+                .getSelectionModel().selectedItemProperty()
+                .addListener((obs, oldVal, newVal) -> {
+                    if (newVal != null) {
+                        view.getMapVisualizer().setAnimalsWithDominantGenotype(newVal.animalIds());
+                    } else {
+                        view.getMapVisualizer().setAnimalsWithDominantGenotype(null);
+                    }
+                });
     }
 
     private void handleAnimalSelection(Integer animalId) {
