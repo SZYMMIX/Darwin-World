@@ -3,6 +3,7 @@ package agh.ics.oop.model;
 
 import java.util.Arrays;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 public class Genotype {
     private final int[] genes;
@@ -93,5 +94,12 @@ public class Genotype {
     @Override
     public int hashCode() {
         return Arrays.hashCode(genes);
+    }
+
+    @Override
+    public String toString() {
+        return Arrays.stream(genes)
+                .mapToObj(String::valueOf)
+                .collect(Collectors.joining());
     }
 }

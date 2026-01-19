@@ -1,9 +1,6 @@
 package agh.ics.oop.simulation;
 
-import agh.ics.oop.model.AnimalSnapshot;
-import agh.ics.oop.model.Plant;
-import agh.ics.oop.model.Vector2d;
-import agh.ics.oop.util.VisibleForTests;
+import agh.ics.oop.model.*;
 
 import java.util.*;
 
@@ -14,7 +11,7 @@ public class Simulation {
     private final InteractionHandler interactionHandler;
     private final Random random;
 
-    private int currentDay = -1;
+    private int currentDay = 0;
 
     @VisibleForTests
     Simulation(SimulationParameters params, Random random) {
@@ -34,15 +31,26 @@ public class Simulation {
     }
 
     public SimulationSnapshot step() {
+        currentDay++;
         removeDead();
         moveAnimals();
         eatAndReproduce();
         map.growPlants(params.dailyPlantGrowth());
         applyDailyEnergyCost();
-
-        currentDay++;
-
         return createSnapshot();
+    }
+
+    public SimulationSnapshot getSnapshot() {
+        return createSnapshot();
+    }
+
+    public Optional<TrackedAnimalStats> getAnimalDetails(int animalId, int dayOfInterest) {
+        RuntimeAnimal runtimeAnimal = map.getAnimals().stream()
+                .filter(a -> a.getId() == animalId)
+                .findFirst()
+                .orElse(null);
+
+        return repository.getTrackedAnimalStats(animalId, dayOfInterest, runtimeAnimal);
     }
 
     private void removeDead() {
@@ -80,6 +88,7 @@ public class Simulation {
 
             if (result.plantEaten()) {
                 map.removePlant(position);
+                repository.registerPlantConsumption(animalsOnField.get(0).getId(), currentDay);
             }
 
             newBirths.addAll(result.newChildren());
