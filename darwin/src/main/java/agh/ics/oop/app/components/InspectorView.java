@@ -36,8 +36,6 @@ public class InspectorView extends VBox {
         statusLabel.setStyle("-fx-font-style: italic; -fx-text-fill: gray;");
 
         stopTrackingButton.setVisible(false);
-        highlightChildrenCheck.setDisable(true);
-        highlightDescendantsCheck.setDisable(true);
 
         getChildren().addAll(
                 header,
@@ -86,8 +84,6 @@ public class InspectorView extends VBox {
         }
 
         stopTrackingButton.setVisible(true);
-        highlightChildrenCheck.setDisable(false);
-        highlightDescendantsCheck.setDisable(false);
     }
 
     public void clear() {
@@ -103,10 +99,6 @@ public class InspectorView extends VBox {
         ageLabel.setText("-");
 
         stopTrackingButton.setVisible(false);
-        highlightChildrenCheck.setDisable(true);
-        highlightChildrenCheck.setSelected(false);
-        highlightDescendantsCheck.setDisable(true);
-        highlightDescendantsCheck.setSelected(false);
     }
 
     public Button getStopTrackingButton() { return stopTrackingButton; }

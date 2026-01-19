@@ -152,9 +152,15 @@ public class MapVisualizer extends Pane {
         double realSize = size - (2 * padding);
         int aid = animal.id();
 
+        if (trackedAnimalId != null && trackedAnimalId.equals(aid)) {
+            gc.setStroke(Color.MAGENTA);
+            gc.setLineWidth(Math.max(3.0, size * 0.2));
+            gc.strokeOval(x + padding, y + padding, realSize, realSize);
+        }
+
         if (animalsWithDominantGenotype.contains(aid)) {
             gc.setStroke(Color.GOLD);
-            gc.setLineWidth(Math.max(2.0, size * 0.15));
+            gc.setLineWidth(Math.max(2.0, size * 0.175));
             gc.strokeOval(x + padding, y + padding, realSize, realSize);
         }
 
@@ -165,13 +171,7 @@ public class MapVisualizer extends Pane {
         }
         else if (highlightedDescendants.contains(aid)) {
             gc.setStroke(Color.MEDIUMPURPLE);
-            gc.setLineWidth(Math.max(2.0, size * 0.15));
-            gc.strokeOval(x + padding, y + padding, realSize, realSize);
-        }
-
-        if (trackedAnimalId != null && trackedAnimalId.equals(aid)) {
-            gc.setStroke(Color.MAGENTA);
-            gc.setLineWidth(Math.max(3.0, size * 0.125));
+            gc.setLineWidth(Math.max(2.0, size * 0.1));
             gc.strokeOval(x + padding, y + padding, realSize, realSize);
         }
 

@@ -83,6 +83,7 @@ public class Simulation {
 
             if (result.plantEaten()) {
                 map.removePlant(position);
+                repository.registerPlantConsumption(animalsOnField.get(0).getId(), currentDay);
             }
 
             newBirths.addAll(result.newChildren());

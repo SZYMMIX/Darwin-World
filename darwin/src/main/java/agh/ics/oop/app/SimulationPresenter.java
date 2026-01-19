@@ -3,6 +3,7 @@ package agh.ics.oop.app;
 import agh.ics.oop.app.components.InspectorView;
 import agh.ics.oop.app.components.SimulationToolbar;
 import agh.ics.oop.app.model.AnimalViewModel;
+import agh.ics.oop.model.Genotype;
 import agh.ics.oop.model.TrackedAnimalStats;
 import agh.ics.oop.simulation.GenotypeStat;
 import agh.ics.oop.simulation.Simulation;
@@ -21,7 +22,7 @@ public class SimulationPresenter {
     private static final int MAX_HISTORY_SIZE = 100;
     private int historyCursor = -1;
 
-    private boolean isHighlightingDominant = false;
+    private Genotype selectedGenotypeToHighlight = null;
     private Integer trackedAnimalId = null;
 
     public SimulationPresenter(SimulationWindow view, SimulationParameters params) {
@@ -74,14 +75,15 @@ public class SimulationPresenter {
         inspector.getHighlightChildrenCheck().selectedProperty().addListener((obs, oldV, newV) -> updateFamilyHighlight());
         inspector.getHighlightDescendantsCheck().selectedProperty().addListener((obs, oldV, newV) -> updateFamilyHighlight());
 
+        inspector.getStopTrackingButton().setOnAction(e -> handleAnimalSelection(null));
+
         view.getSidebar().getStatsView().getTopGenotypesList()
                 .getSelectionModel().selectedItemProperty()
                 .addListener((obs, oldVal, newVal) -> {
                     if (newVal != null) {
-                        view.getMapVisualizer().setAnimalsWithDominantGenotype(newVal.animalIds());
-                    } else {
-                        view.getMapVisualizer().setAnimalsWithDominantGenotype(null);
+                        this.selectedGenotypeToHighlight = newVal.genotype();
                     }
+                    updateHighlightFilters(getCurrentSnapshot());
                 });
     }
 
@@ -89,21 +91,23 @@ public class SimulationPresenter {
         this.trackedAnimalId = animalId;
         view.getMapVisualizer().setTrackedAnimalId(animalId);
         updateInspector(getCurrentSnapshot());
-    }
-
-    private void toggleDominantHighlight() {
-        this.isHighlightingDominant = !this.isHighlightingDominant;
-        updateHighlightFilters(getCurrentSnapshot());
+        if (animalId != null) {
+            view.getSidebar().selectInspectorTab();
+        }
     }
 
     private void updateHighlightFilters(SimulationSnapshot snapshot) {
         if (snapshot == null) return;
 
-        if (isHighlightingDominant) {
-            List<GenotypeStat> tops = snapshot.stats().topGenotypes();
-            if (!tops.isEmpty()) {
-                List<Integer> ids = tops.get(0).animalIds();
-                view.getMapVisualizer().setAnimalsWithDominantGenotype(ids);
+        if (selectedGenotypeToHighlight != null) {
+            Optional<GenotypeStat> stat = snapshot.stats().topGenotypes().stream()
+                    .filter(s -> s.genotype().equals(selectedGenotypeToHighlight))
+                    .findFirst();
+
+            if (stat.isPresent()) {
+                view.getMapVisualizer().setAnimalsWithDominantGenotype(stat.get().animalIds());
+            } else {
+                view.getMapVisualizer().setAnimalsWithDominantGenotype(Collections.emptyList());
             }
         } else {
             view.getMapVisualizer().setAnimalsWithDominantGenotype(Collections.emptyList());
